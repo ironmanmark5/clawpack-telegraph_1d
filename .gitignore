@@ -1,0 +1,29 @@
+# Pastas de resultados e gráficos (o coração da limpeza)
+output_*/
+plots_*/
+_output/
+_plots/
+__pycache__/
+
+# Garante que a pasta resultados NUNCA seja ignorada
+!resultados/
+!resultados/*.png
+
+# Arquivos de dados temporários do Clawpack
+*.data
+.data
+.output
+.plots
+
+# Arquivos de compilação (Binários e Objetos)
+*.o
+*.mod
+xclaw
+
+# Arquivos de log do sistema
+*.log
+pyclaw.log
+
+
+# Arquivos residuais do Windows/WSL
+*.Identifier
