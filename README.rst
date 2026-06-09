@@ -1,94 +1,125 @@
 # Equação do Telegrafista no Clawpack
 
-Implementação da equação do telegrafista (caso homogêneo → equação da onda) utilizando o ambiente Clawpack. Desenvolvido como parte de Trabalho de Conclusão de Curso (TCC).
+Implementação numérica da Equação do Telegrafista (caso homogêneo, equivalente à equação da onda) utilizando o framework **Clawpack**.
 
-## Modelo Matemático
+Este projeto foi desenvolvido como parte de um **Trabalho de Conclusão de Curso (TCC)** e tem como objetivo estudar a propagação de ondas, a implementação de solucionadores de Riemann e a análise de convergência de métodos de volumes finitos.
 
-A equação homogênea considerada é:
+---
 
-```math
-\frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}
+## Problema Modelado
+
+O caso homogêneo da Equação do Telegrafista é dado por:
+
+```text
+∂²u/∂t² = c² ∂²u/∂x²
 ```
 
 com condição inicial gaussiana:
 
-```math
-u(x,0) = e^{-\beta x^2}
-```
-
-```math
-\frac{\partial u}{\partial t}(x,0) = 0
+```text
+u(x,0) = exp(-βx²)
+u_t(x,0) = 0
 ```
 
 onde:
 
-* (c = 2)
-* (\beta = 200)
+* c = 2 (velocidade de propagação)
+* β = 200 (largura da gaussiana)
 
-A solução exata consiste em duas ondas que se propagam simetricamente:
+A solução exata consiste em duas ondas gaussianas que se propagam em sentidos opostos:
 
-```math
-u_{\text{exata}}(x,t)=
-\frac{1}{2}e^{-\beta(x-ct)^2}
+```text
+u(x,t) =
+½ exp[-β(x-ct)²]
 +
-\frac{1}{2}e^{-\beta(x+ct)^2}
+½ exp[-β(x+ct)²]
 ```
 
-O sistema é reescrito como um sistema hiperbólico de primeira ordem:
+Para utilização no Clawpack, a equação é reescrita como um sistema hiperbólico de primeira ordem:
 
-```math
-\mathbf{q}_t + A\mathbf{q}_x = 0
+```text
+q_t + A q_x = 0
 ```
 
-com
+com:
 
-```math
-\mathbf{q}=
-\begin{pmatrix}
-u\\
-u_t\\
-u_x
-\end{pmatrix}
+```text
+q = [u, u_t, u_x]ᵀ
 ```
 
-e
+e matriz de coeficientes:
 
-```math
-A=
-\begin{pmatrix}
-0 & 0 & 0\\
-0 & 0 & -c^2\\
-0 & -1 & 0
-\end{pmatrix}
+```text
+      | 0   0    0 |
+A  =  | 0   0  -c² |
+      | 0  -1    0 |
 ```
 
-A discretização é realizada utilizando o solver de Riemann do Clawpack com esquema de segunda ordem e limitadores `mc`.
+A discretização utiliza:
+
+* Método dos Volumes Finitos
+* Solver de Riemann personalizado
+* Esquema de segunda ordem
+* Limitadores MC (Monotonized Central)
 
 ---
 
-## Estrutura dos Arquivos
+## Estrutura do Projeto
 
-| Arquivo                 | Descrição                                                       |
-| ----------------------- | --------------------------------------------------------------- |
-| `setrun.py`             | Parâmetros da simulação (malha, tempo final, CFL e saídas).     |
-| `setprob.f90`           | Leitura dos parâmetros físicos (`rho`, `K`, `beta`).            |
-| `qinit.f90`             | Condição inicial gaussiana para (u), (u_t=0) e (u_x) analítico. |
-| `rp1_telegraph.f90`     | Solucionador de Riemann (autovalores (-c,0,c)).                 |
-| `setplot.py`            | Geração de gráficos da solução numérica e exata.                |
-| `Makefile`              | Compilação e execução no padrão Clawpack.                       |
-| `rodar_telegrafista.sh` | Automação para diferentes refinamentos de malha.                |
-| `comparar_malhas.py`    | Pós-processamento, cálculo de erros e estudo de convergência.   |
+```text
+telegraph_1d/
+├── Makefile
+├── README.md
+├── qinit.f90
+├── setprob.f90
+├── setrun.py
+├── setplot.py
+├── src1.f90
+├── comparar_malhas.py
+├── rodar.sh
+└── ...
+```
+
+### Arquivos Principais
+
+| Arquivo              | Função                                           |
+| -------------------- | ------------------------------------------------ |
+| `setrun.py`          | Configuração da malha, tempo final, CFL e saídas |
+| `setprob.f90`        | Leitura dos parâmetros físicos                   |
+| `qinit.f90`          | Definição da condição inicial                    |
+| `src1.f90`           | Implementação do sistema hiperbólico             |
+| `setplot.py`         | Geração dos gráficos                             |
+| `comparar_malhas.py` | Análise de erros e convergência                  |
+| `Makefile`           | Compilação e execução                            |
 
 ---
 
-## Compilação e Execução
+## Requisitos
 
-Antes de executar qualquer comando `make`, configure as variáveis de ambiente:
+* Python 3
+* Fortran (gfortran)
+* Clawpack 5.x
+
+Verifique sua instalação:
+
+```bash
+python -c "import clawpack; print(clawpack.__version__)"
+```
+
+---
+
+## Configuração do Ambiente
+
+Defina as variáveis de ambiente do Clawpack:
 
 ```bash
 export CLAW=$(realpath ../../..)
 export PYTHONPATH=$CLAW:$PYTHONPATH
 ```
+
+---
+
+## Compilação
 
 Compile o executável:
 
@@ -96,13 +127,17 @@ Compile o executável:
 make .exe
 ```
 
+---
+
+## Execução
+
 Execute a simulação:
 
 ```bash
 make .output OUTDIR=output
 ```
 
-Gere os gráficos:
+Gerar gráficos:
 
 ```bash
 make .plots OUTDIR=output PLOTDIR=plots
@@ -115,126 +150,117 @@ make .plots OUTDIR=output PLOTDIR=plots
 Torne o script executável:
 
 ```bash
-chmod +x rodar_telegrafista.sh
+chmod +x rodar.sh
 ```
 
-Executando uma malha com 200 células:
+Executar uma única malha:
 
 ```bash
-./rodar_telegrafista.sh 200
+./rodar.sh 200
 ```
 
-Os resultados serão armazenados em:
-
-```text
-output_malha_200/
-plots_malha_200/
-```
-
-Para executar várias malhas:
+Executar várias malhas:
 
 ```bash
 for n in 50 100 200 400 800; do
-    ./rodar_telegrafista.sh $n
+    ./rodar.sh $n
 done
 ```
 
+Os resultados serão armazenados em diretórios separados para cada refinamento.
+
 ---
 
-## Pós-Processamento e Análise de Erros
+## Pós-Processamento
 
-Após gerar as soluções para as diferentes malhas:
+Após gerar as soluções:
 
 ```bash
 python3 comparar_malhas.py
 ```
 
-O script:
+O script realiza:
 
-* Lê os arquivos `fort.qXXXX` no instante desejado.
-* Compara a solução numérica com a solução exata.
-* Calcula o erro (L^2).
-* Gera gráficos de convergência em escala log-log.
-* Inclui retas de referência de primeira e segunda ordem.
+* Leitura dos arquivos de saída do Clawpack
+* Comparação com a solução exata
+* Cálculo do erro L²
+* Gráfico log-log de convergência
+* Comparação visual entre solução numérica e analítica
 
 ---
 
-## Personalização de Parâmetros
+## Parâmetros Físicos
 
-### Parâmetros Físicos
-
-Os parâmetros são definidos em `setprob.data`:
+Definidos em `setprob.data`:
 
 ```text
-rho    # densidade
-K      # módulo bulk
-beta   # largura da gaussiana
+rho   = 1.0
+K     = 4.0
+beta  = 200.0
 ```
 
-Valores padrão:
+A velocidade da onda é calculada por:
 
 ```text
-rho  = 1.0
-K    = 4.0
-beta = 200.0
-```
-
-A velocidade da onda é dada por:
-
-```math
-c=\sqrt{\frac{K}{\rho}}
+c = sqrt(K/rho)
 ```
 
 resultando em:
 
-```math
-c=2
+```text
+c = 2
 ```
 
-### Parâmetros Numéricos
+---
 
-No arquivo `setrun.py` podem ser alterados:
+## Parâmetros Numéricos
 
-* Número de células: `clawdata.num_cells[0]`
-* Tempo final: `clawdata.tfinal`
-* Número de saídas: `clawdata.num_output_times`
-* Limitadores: `clawdata.limiter`
-* Condições de contorno:
+Podem ser alterados em `setrun.py`:
 
-  * `clawdata.bc_lower[0]`
-  * `clawdata.bc_upper[0]`
+```python
+clawdata.num_cells[0]
+clawdata.tfinal
+clawdata.num_output_times
+clawdata.limiter
+clawdata.bc_lower[0]
+clawdata.bc_upper[0]
+```
 
-Exemplos:
+Exemplo:
 
 ```python
 clawdata.limiter = ['mc', 'mc', 'mc']
 ```
 
-```python
-clawdata.bc_lower[0] = 'extrap'
-clawdata.bc_upper[0] = 'extrap'
-```
+---
 
-ou
+## Resultados Esperados
 
-```python
-clawdata.bc_lower[0] = 'periodic'
-clawdata.bc_upper[0] = 'periodic'
-```
+A solução inicial gaussiana divide-se em duas ondas que se propagam simetricamente para a esquerda e para a direita com velocidade constante.
+
+O refinamento sucessivo da malha deve produzir:
+
+* Redução do erro L²
+* Aproximação da ordem teórica do método
+* Melhor concordância com a solução exata
 
 ---
 
-## Observações
+## Trabalhos Futuros
 
-* A solução exata implementada utiliza os mesmos valores de (c) e (\beta) definidos em `setprob.data`.
-* O solver `rp1_telegraph.f90` foi desenvolvido a partir do exemplo `acoustics_1d` do Clawpack.
-* A implementação atual considera apenas o caso homogêneo.
-* Extensões futuras incluirão termos fonte de amortecimento e reação por meio de técnicas de operator splitting.
+* Inclusão de amortecimento
+* Inclusão de termos de reação
+* Operator Splitting
+* Equação completa do Telegrafista
+* Extensão para duas dimensões
 
 ---
 
 ## Referências
 
-1. Clawpack Documentation: https://www.clawpack.org
-2. LeVeque, R. J. *Finite Volume Methods for Hyperbolic Problems*. Cambridge University Press.
-3. Material teórico do TCC (*Telegrafista_Clawpack.pdf*).
+1. Randall J. LeVeque, *Finite Volume Methods for Hyperbolic Problems*, Cambridge University Press.
+
+2. Clawpack Documentation
+   https://www.clawpack.org
+
+3. Material teórico desenvolvido para o TCC.
