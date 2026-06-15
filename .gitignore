@@ -6,8 +6,8 @@ _plots/
 __pycache__/
 
 # Garante que a pasta resultados NUNCA seja ignorada
-!resultados/
-!resultados/*.png
+#!resultados/
+#!resultados/*.png
 
 # Arquivos de dados temporários do Clawpack
 *.data
