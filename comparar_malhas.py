@@ -2,53 +2,69 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-# Configurações do Problema
-mesh_sizes = [32, 64, 128, 256, 512, 1024]
+# Parâmetros
+c = 2.0
+beta = 200.0
 x_lower, x_upper = -2.0, 2.0
-t_final = 0.0
-u = 1.0  # velocidade de advecção
+tfinal = 0.8
+num_output_times = 64
+output_t0 = True
+t_compare = 0.2
 
-def q_exata(x, t):
-    """ Equação em uso : exp(-100*(x-0.4)^2)/10 """
-    # Considera a translação x -> x - ut
-    x0 = x - u*t
-    # Ajuste simples para o domínio (periódico ou infinito)
-    return np.exp(-100.0 * (x0 - 0.4)**2) / 10.0
+def u_exata(x, t):
+    return 0.5 * np.exp(-beta * (x - c*t)**2) + 0.5 * np.exp(-beta * (x + c*t)**2)
+
+# Frame
+if output_t0:
+    frame_index = int(round(t_compare / tfinal * num_output_times))
+else:
+    frame_index = int(round(t_compare / tfinal * (num_output_times - 1)))
+frame_str = f"{frame_index:04d}"
+
+mesh_sizes = [128, 256, 512, 1024, 2048]
+
+# Cores adequadas para linhas (evitar vermelho que é da exata)
+cores = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+# Azul, laranja, verde, vermelho escuro (mas exata já é vermelho claro pontilhado), roxo
 
 plt.figure(figsize=(10, 6))
+all_y = []
 
-# Loop para ler cada pasta de output
-for m in mesh_sizes:
-    path = f"output_malha_{m}/fort.q0000" # lendo o frame 20 (t=0.2)
-    
-    if os.path.exists(path):
-        # O Clawpack ASCII tem 6 linhas de cabeçalho, então pulamos elas
-        data = np.loadtxt(path, skiprows=6)
-        
-        # Reconstrói o eixo X (centros das células)
-        dx = (x_upper - x_lower) / m
-        x = np.linspace(x_lower + dx/2, x_upper - dx/2, m)
-        
-        plt.plot(x, data, label=f'Malha {m}')
-    else:
-        print(f"Aviso: Pasta {path} não encontrada.")
+for i, mx in enumerate(mesh_sizes):
+    path = f"output_malha_{mx}/fort.q{frame_str}"
+    if not os.path.exists(path):
+        print(f"Aviso: {path} não encontrado. Pulando malha {mx}.")
+        continue
+    data = np.loadtxt(path, skiprows=6)
+    q1 = data[:, 0]
+    dx = (x_upper - x_lower) / mx
+    x_centros = np.linspace(x_lower + dx/2, x_upper - dx/2, mx)
+    plt.plot(x_centros, q1, color=cores[i % len(cores)], linestyle='-', linewidth=1.5,
+             label=f'mx = {mx}')
+    all_y.extend(q1)
 
-# Plotar a Solução Exata para comparação (Linha contínua)
-x_fino = np.linspace(x_lower, x_upper, 1600)
-plt.plot(x_fino, q_exata(x_fino, t_final), 'r--', linewidth=2, label='Solução Exata')
+# Exata (vermelho pontilhado)
+x_fino = np.linspace(x_lower, x_upper, 2000)
+u_ex = u_exata(x_fino, t_compare)
+plt.plot(x_fino, u_ex, 'r--', linewidth=2, label='Solução exata')
 
-# Estética do Gráfico
-plt.title(f'Comparação de Convergência de Malha (t = {t_final})', fontsize=14)
-plt.xlabel('x', fontsize=12)
-plt.ylabel('q', fontsize=12)
-plt.xlim([-0.5, 1.5]) # Focar na região onde a onda está (x=0.6)
-plt.ylim([-0.01, 0.12])
-plt.legend()
+# Ajuste de limites
+mask = u_ex > 1e-3
+if mask.any():
+    x_min = x_fino[mask][0] - 0.3
+    x_max = x_fino[mask][-1] + 0.3
+    plt.xlim(x_min, x_max)
+ymax = max(u_ex.max(), max(all_y) if all_y else 0)
+plt.ylim(-0.05 * ymax, ymax * 1.05)
+
+plt.title(r'Equação do Telegrafista ($t = {:.2f}$)'.format(t_compare), fontsize=14)
+plt.xlabel(r'$x$', fontsize=12)
+plt.ylabel(r'$u$ (tensão)', fontsize=12)
+plt.legend(loc='upper right')
 plt.grid(alpha=0.3)
 
-# Salvar o resultado
-os.makedirs('resultados', exist_ok=True) # Cria pasta 'resultados' se ela não existir
-
-plt.savefig('resultados/frame01.png', dpi=1000)
-print("Sucesso! O gráfico 'comparativo_malhas.png' foi gerado.")
+os.makedirs('resultados', exist_ok=True)
+nome_eps = f'resultados/comparacao_malhas_t_{t_compare:.2f}.eps'.replace('.', '_')
+plt.savefig(nome_eps, format='eps')
+print(f"Salvo: {nome_eps}")
 plt.show()
