@@ -27,3 +27,7 @@ pyclaw.log
 
 # Arquivos residuais do Windows/WSL
 *.Identifier
+
+
+# documentos
+ANALISE_TCC.md
