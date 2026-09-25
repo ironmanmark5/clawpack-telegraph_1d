@@ -18,6 +18,8 @@ A primeira execução compila o executável `xclaw` a partir dos fontes Classic 
 
 Os resultados ficam em `resultados/`, com um diretório por configuração. Cada diretório contém os arquivos `fort.qNNNN` e `fort.tNNNN`, os `claw.data` e `setprob.data` efetivos, `parametros.json`, `amplitude.csv`, `perfis.csv` e `execucao.log`. O índice `casos.json` relaciona cada caso concluído às configurações. `resumo.csv` registra parâmetros e amplitude nos tempos 0,4 e 0,8. As figuras comparativas estão em `resultados/figuras/caso_N.png`, com perfil de u em t=0,4 e amplitude máxima ao longo do tempo. Arquivos `caso_N_t*.png` mostram os perfis em t=0,2, 0,4, 0,6 e 0,8. Os perfis CSV incluem também o frame inicial.
 
+Para gerar uma pasta separada com as comparações do roteiro, rode `python3 gerar_figuras_comparativas.py`. Isso usa as simulações já concluídas e cria `resultados/figuras_comparativas/`, com figuras PNG e PDF, tabelas de amplitude nos tempos comuns e matrizes do Caso 8. A pasta inclui as comparações entre configurações dos Casos 4 e 5 e as condições iniciais dos Casos 6 e 7.
+
 ## Parâmetros
 
 Todos os casos usam c=2, domínio [-2,2], N=400, tempo final 0,8, 64 intervalos de saída, correção hiperbólica de segunda ordem com limitador MC, `source_split=1` e contornos por extrapolação. A fonte permanece ativa até quando a=b=0 porque também atualiza u por u_t. Os nomes a, b, beta e x0 aparecem nos diretórios para rastrear cada execução.
