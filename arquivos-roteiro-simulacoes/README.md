@@ -2,6 +2,10 @@
 
 Esta pasta reúne as cinco rotinas recebidas da orientadora e a execução dos casos descritos na mensagem de 18/09. O Caso 1, de validação e convergência, permanece fora desta bateria. O arquivo `Roteiro-simulacoes.tex` não estava disponível nesta pasta; a lista de parâmetros abaixo foi transcrita do contexto fornecido pelo autor.
 
+## Proveniência e licença
+
+`qinit.f90` e `setrun.py` foram adaptados do exemplo Classic correspondente da árvore do [Clawpack](https://github.com/clawpack/clawpack), projeto dos Clawpack Developers. O código-fonte original é distribuído sob a licença BSD 3-Clause; uma cópia dos avisos e termos está em [`LICENSE-CLAWPACK.txt`](LICENSE-CLAWPACK.txt). As rotinas específicas da equação do telégrafo foram fornecidas pela orientadora ou desenvolvidas/adaptadas para este projeto.
+
 ## Como executar
 
 Entre nesta pasta e rode:
