@@ -1,0 +1,96 @@
+{
+  "meshes": [
+    32,
+    64,
+    128,
+    256,
+    512,
+    1024,
+    2048
+  ],
+  "physics": {
+    "c": 2.0,
+    "a": 1.0,
+    "b": 1.0,
+    "beta": 200.0,
+    "x0": 0.0
+  },
+  "numerics": {
+    "domain": [
+      -2.0,
+      2.0
+    ],
+    "tfinal": 0.8,
+    "cfl_desired": 0.9,
+    "cfl_max": 1.0,
+    "dt_variable": true,
+    "dt_initial": 0.1,
+    "dt_max": 1e+99,
+    "order": 2,
+    "limiter": [
+      "mc",
+      "mc",
+      "mc"
+    ],
+    "source_split": 1,
+    "boundary": [
+      "extrap",
+      "extrap"
+    ],
+    "num_output_times": 64,
+    "output_t0": true,
+    "num_ghost": 2,
+    "num_eqn": 3,
+    "num_waves": 3
+  },
+  "provenance": {
+    "project_commit": "3bab969a11eba9d7820a3b89a3c409564a1ba3f6",
+    "project_branch": "tcc-simulacoes",
+    "working_tree_status": "M arquivos-roteiro-simulacoes/README.md\n M arquivos-roteiro-simulacoes/executar_casos.py\n M arquivos-roteiro-simulacoes/gerar_figuras_comparativas.py\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/LEIA-ME.md\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/amplitudes_tempos_comuns.csv\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_2_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_2_t0p8.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_3_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_3_t0p8.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_4_quatro_configuracoes_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_4_quatro_configuracoes_t0p8.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_5_comparacao_b_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_5_comparacao_b_t0p8.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_6_condicoes_iniciais.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_6_evolucao.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_6_versus_caso_5_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_6_versus_caso_5_t0p4.png\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_7_beta_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_7_beta_t0p8.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_7_condicoes_iniciais.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_8_diferencas_vs_b0.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_8_por_a_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_8_por_a_t0p8.pdf\n M arquivos-roteiro-simulacoes/setrun.py\n?? arquivos-roteiro-simulacoes/AUTOCONVERGENCIA.md\n?? arquivos-roteiro-simulacoes/autoconvergencia.py\n?? arquivos-roteiro-simulacoes/resultados_autoconvergencia/\n?? arquivos-roteiro-simulacoes/test_autoconvergencia.py",
+    "clawpack_version": "5.14.0",
+    "clawpack_installation": "/home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack",
+    "clawpack_discovery": "--claw",
+    "classic_commit": "6b3dfe6419d9b389e2d04a372a7880c9e9c8349d",
+    "compiler": "/usr/bin/gfortran",
+    "compiler_version": "GNU Fortran (GCC) 16.2.1 20260819 (Red Hat 16.2.1-2)\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+    "flags": "-O2",
+    "source_sha256": {
+      "classic/b4step1.f90": "6f9f4977614d01208a15d8f66131b909ead92fb9d5604c94ffba2dbfdeba54b3",
+      "classic/bc1.f": "4335fd8d2191a027b6ff66e90ffe11909357cb14890d58ab21092628bfa93148",
+      "classic/claw1.f": "ce38ce15e54303ae9b985f79cc81ba48626208d077cb82fdb094a1f996c2faf5",
+      "classic/claw1ez.f": "bb367d54f690499ac79b4148799e22f40a6d7d85f0a25475f13ab397fe29aa76",
+      "classic/copyq1.f": "6917b443ecc1e960b68c87076efee33ca9348937863ef42a4d066fa34d63ea04",
+      "classic/driver.f90": "9b8a8a3221de289ec0d5a0e2f947097a634d29e3bf53393b3867aa1615e541ba",
+      "classic/inlinelimiter.f90": "03b100dc66452d1f429b58365a2b8bc9efa49830fded52c5627c1f8daaeee0e9",
+      "classic/opendatafile.f": "ae9165f623ab96c2c96c8b52f5cde972d277a140f50bd335aad7497520210184",
+      "classic/out1.f": "805c57deb2570e13708f7d3c70a5493653e57e93207978b66daf508da2c7ac42",
+      "classic/setaux.f90": "988a4434eb53dcf845341fc85d3d9c1326bb9c9cf673073d586aacda5e58e41a",
+      "classic/step1.f90": "3d2fa4bd301eb9e4e34fc9e87935bac1521886049bc375c7481e64b9a99f37cd",
+      "local/Makefile": "d3e848df7daea92792d37b61d1f5040ecfe15774d0bf9385a9dd6fb8661aaa2e",
+      "local/autoconvergencia.py": "a3810fdc7a1fe8ddd1b9697e35c1b6b05744172c7706d5c6f9ca02b5f28a6ab0",
+      "local/executar_casos.py": "f7320cce34d98b45e3c142603de72c7de2701f1564c5b537fbe26dcc9c9f7b55",
+      "local/qinit.f90": "fe4b65cc27160079032b2501b8ded7077c02f89d8132632f01f008b5b005d4a1",
+      "local/rp1_telegraph.f90": "d6e31e0109e083a06968ef8e435a8f8bab4c4728466f04906bd1826fb325cf5b",
+      "local/setprob.f90": "3ec70245b941156a64d9981dbd421bbbbcf34fed5588a606d88c433f59f7d91a",
+      "local/setrun.py": "64fc7962d9ee6cbbcbcdd5fd8d387fc2642d3cfb846f2d14c3f01f9d673839f1",
+      "local/src1.f90": "59c206cd341a6a86282409f02e5e46b793ed6c1147c38e1b173cea1dcce21b67",
+      "python/clawpack_init.py": "1633dbb4b52407cea07fa4fed15ee80e5eb4cf4795d3044fe50a84c933820929",
+      "python/clawutil_data.py": "458fec1d642fc81cf2a907e6b1beb93f9962a7ca9c240493833743c38d34945e"
+    },
+    "python_version": "3.14.7 (main, Aug 10 2026, 00:00:00) [GCC 16.1.1 20260515 (Red Hat 16.1.1-2)]",
+    "signature": "12618a16f93267591627d24fe0338cb7a980628c8c7842bfc9a21a72ddc4a3ac",
+    "executable_sha256": "591e09ab73c1c11502f0532d1008a8ce7f840bc1cdb9071e0e7c8e8c4aaa1690",
+    "build_directory": "build/12618a16f9326759_a3810fdc",
+    "build_command": [
+      "make",
+      "-B",
+      ".exe",
+      "CLAW=/home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack",
+      "FC=/usr/bin/gfortran",
+      "FFLAGS=-O2",
+      "CLASSIC=../classic/setaux.f90 ../classic/bc1.f ../classic/b4step1.f90 ../classic/driver.f90 ../classic/claw1ez.f ../classic/claw1.f ../classic/copyq1.f ../classic/inlinelimiter.f90 ../classic/opendatafile.f ../classic/out1.f ../classic/step1.f90"
+    ],
+    "make_dry_run": "/usr/bin/gfortran -O2 -o xclaw /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/setaux.f90 /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/bc1.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/b4step1.f90 /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/driver.f90 /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/claw1ez.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/claw1.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/copyq1.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/inlinelimiter.f90 /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/opendatafile.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/out1.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/step1.f90 qinit.f90 setprob.f90 src1.f90 rp1_telegraph.f90"
+  },
+  "diagnostic_verbosity": 1
+}

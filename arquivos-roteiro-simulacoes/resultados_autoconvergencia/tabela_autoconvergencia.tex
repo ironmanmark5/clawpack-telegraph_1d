@@ -1,0 +1,24 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Autoconvergência em $t=0{,}8$: erro $L^2$ discreto normalizado entre malhas.}
+\label{tab:autoconvergencia_combinado}
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{rrrrrrr}
+\hline
+$N$ & $\Delta x$ & $t$ & $E_u(N)$ & $p_u(N)$ & $E_{u_t}(N)$ & $p_{u_t}(N)$ \\
+\hline
+32 & 0.125 & 0.8 & $7.441192\times 10^{-2}$ & 1.2388 & $2.466716\times 10^{-1}$ & -1.9362 \\
+64 & 0.0625 & 0.8 & $3.153010\times 10^{-2}$ & 1.1962 & $9.439708\times 10^{-1}$ & 0.4824 \\
+128 & 0.03125 & 0.8 & $1.376038\times 10^{-2}$ & 1.6681 & $6.756928\times 10^{-1}$ & 1.4129 \\
+256 & 0.015625 & 0.8 & $4.329820\times 10^{-3}$ & 1.5398 & $2.537534\times 10^{-1}$ & 2.0576 \\
+512 & 0.0078125 & 0.8 & $1.489155\times 10^{-3}$ & 0.8454 & $6.095455\times 10^{-2}$ & 2.1573 \\
+1024 & 0.00390625 & 0.8 & $8.288204\times 10^{-4}$ & -- & $1.366411\times 10^{-2}$ & -- \\
+2048 & 0.001953125 & 0.8 & -- & -- & -- & -- \\
+\hline
+\end{tabular}
+\par\smallskip
+\parbox{0.98\linewidth}{\footnotesize Na linha $N$, $E(N)$ compara $N$ e $2N$,
+e $p(N)$ usa a trinca $N,2N,4N$. A restrição usa a média de duas células finas.
+Os valores indisponíveis são indicados por --.}
+\end{table}

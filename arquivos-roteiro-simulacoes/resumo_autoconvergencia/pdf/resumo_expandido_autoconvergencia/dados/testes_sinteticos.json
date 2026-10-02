@@ -1,0 +1,20 @@
+[
+  {
+    "teste": "diferença constante unitária",
+    "obtido": 1.0,
+    "esperado": 1.0,
+    "status": "passou"
+  },
+  {
+    "teste": "restrição preserva constante",
+    "obtido": 0.0,
+    "esperado": 0.0,
+    "status": "passou"
+  },
+  {
+    "teste": "redução por fator quatro",
+    "obtido": 1.9999999999999991,
+    "esperado": 2.0,
+    "status": "passou"
+  }
+]

@@ -52,3 +52,14 @@ Todos os casos usam c=2, domínio [-2,2], N=400 por padrão (ou o valor de `--ce
 São 16 configurações únicas, incluindo uma execução auxiliar para comparar Caso 5 e Caso 6 alterando somente o centro: `a=1`, `b=-1`, `beta=200`, `x0=0` e `x0=0,5`. O Caso 6 do roteiro continua com `a=0,5`, `b=-1`, `beta=25`, `x0=0,5`. Ele usa `z=x-x0` na condição inicial gaussiana e em sua derivada espacial. Seu pulso deslocado se aproxima da fronteira direita por volta de t=0,75; o domínio original foi mantido, portanto os resultados posteriores a esse instante podem incluir influência do contorno. Avalie essa influência antes de interpretá-los como propagação em domínio aberto.
 
 O script mede `A(t)=max_i |u_i(t)|`, isto é, máximo discreto nos centros das células. Não calcula a solução analítica para a e b não nulos. Os gráficos dos casos 4 a 6 mostram uma única curva em cada painel; nos outros casos fazem as comparações pedidas.
+
+## Autoconvergência e resumo expandido
+
+O experimento combinado de erros e ordem de convergência possui automação própria, separada dos Casos 2–8. Usa sete malhas (`32,64,128,256,512,1024,2048`) e compara médias celulares por restrição conservativa, com `c=2`, `a=1`, `b=1`, `beta=200` e `x0=0`.
+
+- [Metodologia, verificações e comandos de reprodução](AUTOCONVERGENCIA.md).
+- [Relatório com os resultados calculados](resultados_autoconvergencia/RELATORIO.md).
+- [Tabela de erros e ordens em CSV](resultados_autoconvergencia/autoconvergencia.csv).
+- [Resumo expandido em PDF e LaTeX para a orientação](resumo_autoconvergencia/README.md).
+
+As saídas brutas e os executáveis permanecem locais; o repositório inclui os resultados agregados, figuras e metadados. Em um clone novo, execute `python3 autoconvergencia.py` para gerar as sete simulações antes de usar `--somente-analisar`.

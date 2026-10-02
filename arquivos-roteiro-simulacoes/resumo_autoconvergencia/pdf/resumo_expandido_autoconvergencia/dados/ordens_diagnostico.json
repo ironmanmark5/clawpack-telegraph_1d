@@ -1,0 +1,16 @@
+{
+  "32": {},
+  "64": {},
+  "128": {},
+  "256": {},
+  "512": {},
+  "1024": {
+    "p_u": "trinca N, 2N, 4N não disponível",
+    "p_ut": "trinca N, 2N, 4N não disponível"
+  },
+  "2048": {
+    "E": "malha 2N não disponível (4096 não executada)",
+    "p_u": "trinca N, 2N, 4N não disponível",
+    "p_ut": "trinca N, 2N, 4N não disponível"
+  }
+}

@@ -1,0 +1,10 @@
+# Arquivos auxiliares da compilação LaTeX; PDF, fontes e dados são versionados.
+*.aux
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.log
