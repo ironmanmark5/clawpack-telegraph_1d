@@ -39,7 +39,8 @@ def cases() -> dict[int, list[tuple[float, float, float, float]]]:
         3: [(0, b, 200, 0) for b in (0, 0.5, 1)],
         4: [(1, 1, 200, 0)],
         5: [(1, -1, 200, 0)],
-        6: [(0.5, -1, 25, 0.5)],
+        # Configuração do roteiro e execução auxiliar para isolar o efeito de x0.
+        6: [(0.5, -1, 25, 0.5), (1, -1, 200, 0.5)],
         7: [(1, -1, beta, 0) for beta in (25, 50, 100, 200)],
         8: [(a, b, 200, 0) for a in (0, 1, 2) for b in (-1, 0, 1)],
     }
@@ -94,22 +95,32 @@ def export_csv(directory: Path, n: int) -> None:
                                  *[f'{value:.16g}' for value in q]])
 
 
-def complete(directory: Path, params: tuple[float, float, float, float]) -> bool:
+def complete(directory: Path, params: tuple[float, float, float, float],
+             num_cells: int | None = None) -> bool:
     manifest = directory / 'parametros.json'
     if not manifest.is_file() or not (directory / 'amplitude.csv').is_file():
         return False
     data = json.loads(manifest.read_text())
     if [data[k] for k in ('a', 'b', 'beta', 'x0')] != list(params):
         return False
+    recorded_cells = data.get('num_cells')
+    if recorded_cells is None or (num_cells is not None and recorded_cells != num_cells):
+        return False
+    try:
+        actual_cells = int((directory / 'fort.q0000').read_text().splitlines()[2].split()[0])
+    except (FileNotFoundError, IndexError, ValueError):
+        return False
+    if actual_cells != recorded_cells:
+        return False
     return all((directory / f'fort.q{i:04d}').is_file() and
                (directory / f'fort.t{i:04d}').is_file() for i in range(65))
 
 
 def simulate(executable: Path, output_root: Path,
-             params: tuple[float, float, float, float]) -> Path:
+             params: tuple[float, float, float, float], num_cells: int) -> Path:
     directory = output_root / run_id(params)
     if directory.exists():
-        if complete(directory, params):
+        if complete(directory, params, num_cells):
             print(f'Reutilizando {directory.name}', flush=True)
             return directory
         raise RuntimeError(f'Saída incompleta ou divergente: {directory}. '
@@ -118,11 +129,11 @@ def simulate(executable: Path, output_root: Path,
     a, b, beta, x0 = params
     with tempfile.TemporaryDirectory(prefix=f'.{run_id(params)}-', dir=output_root) as scratch:
         work = Path(scratch)
-        rundata = setrun(c=2.0, a=a, b=b, beta=beta, x0=x0, num_cells=400)
+        rundata = setrun(c=2.0, a=a, b=b, beta=beta, x0=x0, num_cells=num_cells)
         rundata.write(out_dir=str(work))
         manifest = {
             'id': run_id(params), 'c': 2.0, 'a': a, 'b': b,
-            'beta': beta, 'x0': x0, 'num_cells': 400,
+            'beta': beta, 'x0': x0, 'num_cells': num_cells,
             'domain': [-2.0, 2.0], 'tfinal': 0.8,
             'num_output_times': 64, 'order': 2,
             'limiter': ['mc', 'mc', 'mc'], 'source_split': 1,
@@ -191,13 +202,13 @@ def plot_results(selected: dict[int, list[tuple[float, float, float, float]]],
 
 
 def write_index(selected: dict[int, list[tuple[float, float, float, float]]],
-                output_root: Path) -> None:
+                output_root: Path, num_cells: int) -> None:
     rows = []
     for case, parameters in selected.items():
         for p in parameters:
             directory = output_root / run_id(p)
             amplitude = read_amplitudes(directory)
-            rows.append([case, run_id(p), 2, *p, 400, 0.8,
+            rows.append([case, run_id(p), 2, *p, num_cells, 0.8,
                          f'{amplitude[32][1]:.16g}', f'{amplitude[64][1]:.16g}'])
     with (output_root / 'resumo.csv').open('w', newline='') as stream:
         writer = csv.writer(stream)
@@ -217,7 +228,11 @@ def main() -> None:
                         help='Mostrar as configurações sem compilar ou executar.')
     parser.add_argument('--saida', type=Path, default=ROOT / 'resultados',
                         help='Diretório novo para os resultados.')
+    parser.add_argument('--celulas', type=int, default=400,
+                        help='Número de células espaciais (padrão: 400).')
     args = parser.parse_args()
+    if args.celulas < 2:
+        parser.error('--celulas deve ser pelo menos 2.')
     all_cases = cases()
     invalid = set(args.casos) - set(all_cases)
     if invalid:
@@ -234,10 +249,11 @@ def main() -> None:
     output_root.mkdir(parents=True, exist_ok=True)
     executable = ensure_executable()
     for p in unique:
-        simulate(executable, output_root, p)
+        simulate(executable, output_root, p, args.celulas)
     available = {case: parameters for case, parameters in all_cases.items()
-                 if all(complete(output_root / run_id(p), p) for p in parameters)}
-    write_index(available, output_root)
+                 if all(complete(output_root / run_id(p), p, args.celulas)
+                        for p in parameters)}
+    write_index(available, output_root, args.celulas)
     os.environ.setdefault('MPLCONFIGDIR', str(output_root / '.mplconfig'))
     plot_results(selected, output_root)
     print(f'Resultados completos em {output_root}', flush=True)

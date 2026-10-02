@@ -15,7 +15,7 @@ import numpy as np
 
 #------------------------------
 def setrun(claw_pkg='classic', *, c=2.0, a=1.0, b=1.0,
-           beta=200.0, x0=0.0, num_cells=400):
+           beta=200.0, x0=0.0, num_cells=1024):
 #------------------------------
 
     """

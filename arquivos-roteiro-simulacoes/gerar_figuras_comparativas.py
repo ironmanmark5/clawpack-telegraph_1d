@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Monta as comparações dos Casos 2–8 a partir de simulações já concluídas.
 
-Cria uma pasta independente em resultados/figuras_comparativas. Não executa
+Cria uma pasta figuras_comparativas dentro do diretório de dados. Não executa
 simulações e não inclui o estudo de convergência do Caso 1.
 """
 
@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import os
 from pathlib import Path
 
@@ -19,6 +20,7 @@ ZERO = (0, 0, 200, 0)
 CASE4 = [ZERO, (1, 0, 200, 0), (0, 1, 200, 0), (1, 1, 200, 0)]
 CASE5 = [(1, b, 200, 0) for b in (-1, 0, 1)]
 CASE6 = (0.5, -1, 25, 0.5)
+CASE6_SHIFT_COMPARISON = (1, -1, 200, 0.5)
 FRAMES = (16, 32, 48, 64)
 
 
@@ -227,10 +229,13 @@ def main() -> None:
                      title='Caso 6: pulso deslocado e condição de referência',
                      detail='initial')
     case6_evolution(data_dir, destination)
-    comparison(data_dir, destination, [(1, -1, 200, 0), CASE6], case=6,
-               frame=32, name='caso_6_versus_caso_5_t0p4', detail='full',
-               note='Os dois testes diferem em a, largura e centro do pulso; '
-                    'a comparação não isola um único efeito.')
+    comparison(data_dir, destination,
+               [(1, -1, 200, 0), CASE6_SHIFT_COMPARISON], case=6,
+               frame=32,
+               name='caso_6_versus_caso_5_t0p4',
+               detail='initial',
+               note='Comparação controlada: a=1, b=-1 e beta=200; '
+                    'somente x0 muda de 0 para 0,5.')
 
     initial_profiles(data_dir, destination, groups[7],
                      name='caso_7_condicoes_iniciais',
@@ -245,16 +250,17 @@ def main() -> None:
         case8_panels(data_dir, destination, frame)
     differences_from_b0(data_dir, destination)
     write_amplitudes(data_dir, destination, groups)
+    num_cells = json.loads((path_for(data_dir, ZERO) / 'parametros.json').read_text())['num_cells']
     (destination / 'LEIA-ME.md').write_text(
         '# Figuras comparativas dos Casos 2–8\n\n'
         'Geradas por `python3 gerar_figuras_comparativas.py` a partir dos dados '
-        'de `resultados/`. Cada figura tem versões PNG e PDF. '
+        f'desta pasta, com N={num_cells} células. Cada figura tem versões PNG e PDF. '
         'A tabela `amplitudes_tempos_comuns.csv` usa t=0,2; 0,4; 0,6; 0,8. '
         'As duas matrizes do Caso 8 organizam A(t) por linha a e coluna b.\n\n'
         'O Caso 6 usa o domínio original [-2,2]. Seu pico direito alcança '
         'o contorno perto de t=0,75; a figura final pode refletir esse efeito. '
-        'A comparação com o Caso 5 altera a, beta e x0 simultaneamente e '
-        'não permite atribuir a diferença a apenas um desses parâmetros.\n\n'
+        'A comparação adicional do Caso 6 com o Caso 5 mantém a=1, b=-1 e '
+        'beta=200, mudando somente x0 de 0 para 0,5.\n\n'
         'O Caso 1 permanece reservado para o estudo de validação e convergência.\n'
     )
     print(f'Figuras e tabelas salvas em {destination}')
