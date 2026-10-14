@@ -1,0 +1,5 @@
+# Dependencias em Python dos scripts deste repositorio.
+# O Clawpack nao entra aqui: ele deve ser obtido separadamente, conforme
+# o guia COMO-REPRODUZIR.md, e localizado pelas variaveis CLAW e PYTHONPATH.
+numpy
+matplotlib

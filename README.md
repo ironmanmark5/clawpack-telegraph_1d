@@ -14,6 +14,24 @@ agregados.
 
 <!-- TODO: incluir aqui o link do PDF da monografia quando estiver publicado. -->
 
+## Comece por aqui
+
+Se você chegou pelo texto da monografia e quer conferir ou refazer os
+resultados, o caminho é este:
+
+1. **Verifique o ambiente**: `./verificar-ambiente.sh` diz o que já está pronto
+   e o que falta (compilador, Python, pacotes e árvore do Clawpack).
+2. **Siga o guia passo a passo**: [`COMO-REPRODUZIR.md`](COMO-REPRODUZIR.md)
+   descreve, na ordem da monografia, o que executar em cada etapa, o que
+   esperar de cada execução e o que não está versionado de propósito.
+3. **Para entender o que foi alterado no Clawpack**:
+   [`docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md`](docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md),
+   arquivo por arquivo, com o motivo de cada mudança.
+4. **Para ler os dados sem executar nada**:
+   [`docs/DADOS-E-NOMENCLATURA.md`](docs/DADOS-E-NOMENCLATURA.md) explica a
+   convenção dos nomes das configurações, as colunas de cada CSV e a
+   correspondência entre cada caso e as seções, figuras e tabelas do texto.
+
 ## A equação e o sistema resolvido
 
 $$u_{tt} + a\,u_t = c^2 u_{xx} + b\,u$$
@@ -39,12 +57,14 @@ separação fracionária, após a etapa hiperbólica.
 
 ## Como reproduzir
 
-Pré-requisitos: `make`, `gfortran`, Python 3 com `matplotlib` e a árvore de
-fontes do Clawpack. O projeto foi executado com Clawpack 5.14.0, `gfortran`
-16.2.1 e Python 3.14.7.
+Pré-requisitos: `make`, `gfortran`, Python 3 com `numpy` e `matplotlib`
+(veja `requirements.txt`) e a árvore de fontes do Clawpack. O projeto foi
+executado com Clawpack 5.14.0, `gfortran` 16.2.1 e Python 3.14.7. O Clawpack é
+uma dependência externa e não está incluído neste repositório:
 
 ```bash
-export CLAW=/caminho/para/clawpack
+git clone --branch v5.14.0 https://github.com/clawpack/clawpack.git
+export CLAW=$PWD/clawpack
 export PYTHONPATH=$CLAW:$PYTHONPATH
 ```
 
@@ -91,7 +111,12 @@ O detalhamento de cada arquivo alterado e o motivo de cada alteração estão em
 │   ├── resultados_autoconvergencia/     # erros, ordens e figuras do refinamento
 │   └── resumo_autoconvergencia/         # resumo expandido para a orientação
 ├── solver-referencia/                  # solucionador usado no Caso 1
-├── docs/                               # documentação das alterações
+├── COMO-REPRODUZIR.md                  # guia passo a passo da reprodução
+├── verificar-ambiente.sh               # confere compilador, Python e Clawpack
+├── requirements.txt                    # dependências em Python
+├── docs/                               # alterações feitas e dicionário de dados
+│   ├── ALTERACOES-EM-RELACAO-AO-CLAWPACK.md
+│   └── DADOS-E-NOMENCLATURA.md
 ├── CREDITS.md                          # créditos e atribuições
 ├── LICENSE                             # licença BSD de três cláusulas
 └── CITATION.cff                        # como citar este material

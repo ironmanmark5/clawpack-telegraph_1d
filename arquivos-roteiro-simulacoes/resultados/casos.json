@@ -1,0 +1,40 @@
+{
+  "2": [
+    "a0_b0_beta200_x00",
+    "a0p5_b0_beta200_x00",
+    "a1_b0_beta200_x00",
+    "a2_b0_beta200_x00"
+  ],
+  "3": [
+    "a0_b0_beta200_x00",
+    "a0_b0p5_beta200_x00",
+    "a0_b1_beta200_x00"
+  ],
+  "4": [
+    "a1_b1_beta200_x00"
+  ],
+  "5": [
+    "a1_bm1_beta200_x00"
+  ],
+  "6": [
+    "a0p5_bm1_beta25_x00p5",
+    "a1_bm1_beta200_x00p5"
+  ],
+  "7": [
+    "a1_bm1_beta25_x00",
+    "a1_bm1_beta50_x00",
+    "a1_bm1_beta100_x00",
+    "a1_bm1_beta200_x00"
+  ],
+  "8": [
+    "a0_bm1_beta200_x00",
+    "a0_b0_beta200_x00",
+    "a0_b1_beta200_x00",
+    "a1_bm1_beta200_x00",
+    "a1_b0_beta200_x00",
+    "a1_b1_beta200_x00",
+    "a2_bm1_beta200_x00",
+    "a2_b0_beta200_x00",
+    "a2_b1_beta200_x00"
+  ]
+}
