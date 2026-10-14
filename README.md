@@ -55,6 +55,44 @@ separação fracionária, após a etapa hiperbólica.
 | Verificação | raiz do repositório | $a = b = 0$, equivalente à equação da onda | séries de refinamento com $N = 128$ a $2048$ |
 | Bateria do roteiro | `arquivos-roteiro-simulacoes/` | equação completa, com $c$, $a$, $b$, $\beta$ e $x_0$ configuráveis | Casos 2 a 8 e estudo de autoconvergência |
 
+## Onde cada arquivo deve ficar
+
+Este repositório **é** uma pasta de exemplo do Clawpack. Para compilar, o
+conteúdo dele deve estar em `$CLAW/classic/examples/telegraph_1d/`, onde
+`$CLAW` é a raiz da árvore do Clawpack instalada na sua máquina. A partir daí,
+o Clawpack espera uma organização própria: parte dos arquivos fica **dentro
+dessa pasta** e um deles precisa ficar **fora dela**, na pasta de
+solucionadores de Riemann. É o erro mais comum na primeira tentativa de
+compilar.
+
+| Arquivo | Onde deve ficar | Papel |
+| --- | --- | --- |
+| `setrun.py` | `$CLAW/classic/examples/telegraph_1d/` | configura malha, tempo final, CFL, instantes de saída e o termo fonte |
+| `setprob.f90` | idem | lê os parâmetros do modelo em `setprob.data` |
+| `qinit.f90` | idem | define a condição inicial gaussiana e sua derivada espacial |
+| `src1.f90` | idem | trata o termo fonte, com amortecimento e reação |
+| `setplot.py` | idem | gera os gráficos a partir das saídas |
+| `Makefile` | idem | compila e executa, e aponta para o solucionador |
+| **`rp1_telegraph.f90`** | **`$CLAW/riemann/src/`** | solucionador de Riemann da parte hiperbólica; é o único arquivo que vive **fora** da pasta do exemplo |
+
+```bash
+mkdir -p $CLAW/riemann/src
+cp solver-referencia/rp1_telegraph.f90 $CLAW/riemann/src/
+```
+
+Dois detalhes que costumam confundir. Os arquivos `claw.data` e `setprob.data`
+são **gerados** pelo `setrun.py` a cada execução e não devem ser editados à
+mão: para mudar um parâmetro, altere o `setrun.py` e rode `make .data`. E a
+bateria dos Casos 2 a 8 não precisa dessa cópia, porque tem o próprio
+`rp1_telegraph.f90` dentro de `arquivos-roteiro-simulacoes/`, com o `Makefile`
+apontando para ele.
+
+As rotinas efetivamente modificadas em relação ao exemplo acústico do Clawpack
+são cinco: `setprob.f90`, `setrun.py`, `qinit.f90`, `rp1_telegraph.f90` e
+`src1.f90`. O que cada uma mudou, e por quê, está em
+[`docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md`](docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md).
+
+
 ## Como reproduzir
 
 Pré-requisitos: `make`, `gfortran`, Python 3 com `numpy` e `matplotlib`
