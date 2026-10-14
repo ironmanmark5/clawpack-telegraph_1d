@@ -59,11 +59,29 @@ figuras de comparação com a solução exata do repositório
 
 **Erros e ordem.** A tabela de convergência da monografia usa a norma discreta
 $E_{L^2} = [\Delta x \sum_i (u_i - u_{ex}(x_i,t))^2]^{1/2}$ em $t = 0{,}4$ e a
-ordem $p = \log(E_h/E_{h/2})/\log 2$. Os valores estão registrados na
-Seção 5.1 e podem ser recalculados a partir dos `fort.qNNNN` com a expressão
-acima. O script que automatiza esse cálculo ainda não faz parte do
-repositório; enquanto isso, a leitura dos arquivos e o cálculo manual seguem a
-metodologia descrita na Seção 4.4 da monografia.
+ordem $p = \log(E_h/E_{h/2})/\log 2$. O cálculo é automatizado pelo script
+deste repositório, que lê as séries, compara com a solução exata e escreve o
+CSV e o gráfico log–log:
+
+```bash
+python3 convergencia_caso1.py                  # t = 0,4, séries output_malha_*
+python3 convergencia_caso1.py --tempo 0.8      # outro instante
+python3 convergencia_caso1.py --sem-figura     # apenas o CSV, no terminal
+```
+
+Ele deriva $c$ e $\beta$ do `setprob.data` de cada série, de modo que não há
+parâmetros embutidos no código, e confere os valores calculados contra os
+documentados na Seção 5.1, apontando divergências. A saída fica em
+`resultados/convergencia_caso1/`. Para a série completa, os valores esperados
+em $t = 0{,}4$ são $E_{L^2}(u) = 4{,}54747\times10^{-2}$ para $N = 128$ e
+$2{,}55883\times10^{-3}$ para $N = 2048$, com ordens entre 0,90 e 1,30, além
+da comparação com as médias celulares exatas.
+
+O mesmo script calcula os erros das componentes $q_2 = u_t$ e $q_3 = u_x$
+contra as derivadas exatas. Como o termo fonte do caso $a = b = 0$ atua apenas
+sobre $q_1$, essas duas componentes são atualizadas exclusivamente pelo esquema
+hiperbólico; as ordens obtidas para elas ficam próximas de dois, o que isola a
+ordem da etapa de propagação da ordem global de $u$.
 
 ## 3. Casos 2 a 8 — bateria de experimentos
 
@@ -133,8 +151,9 @@ do controle de versão:
 O que está versionado é o conjunto que permite conferir os números da
 monografia sem executar nada: as figuras comparativas, os CSVs agregados
 (`resumo.csv`, `amplitudes_tempos_comuns.csv`, as matrizes do Caso 8 e o
-`autoconvergencia.csv`) e os metadados de proveniência
-(`experimento.json`, `testes_sinteticos.json`, `ordens_diagnostico.json`).
+`autoconvergencia.csv`), o resultado de `resultados/convergencia_caso1/` e os
+metadados de proveniência (`experimento.json`, `testes_sinteticos.json`,
+`ordens_diagnostico.json`).
 
 ## 6. Se algo der errado
 

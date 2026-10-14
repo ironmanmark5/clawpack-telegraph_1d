@@ -93,6 +93,16 @@ make .exe
 make .output OUTDIR=output_malha_512
 ```
 
+A tabela de convergência e o gráfico log–log desse caso são calculados pelo
+script `convergencia_caso1.py`, que lê as séries, compara com a solução exata,
+confere os valores contra os documentados na monografia e também mede a ordem
+de $u_t$ e $u_x$:
+
+```bash
+python3 convergencia_caso1.py            # t = 0,4
+python3 convergencia_caso1.py --tempo 0.8
+```
+
 O detalhamento de cada arquivo alterado e o motivo de cada alteração estão em
 [`docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md`](docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md).
 
@@ -148,6 +158,16 @@ arquivos de cada pasta de saída:
 - `arquivos-roteiro-simulacoes/resultados_autoconvergencia/autoconvergencia.csv`:
   erros de refinamento e ordens observadas, com
   `RELATORIO.md` descrevendo a metodologia e os limites da interpretação.
+
+## Publicações
+
+- SILVA, D. B. F. da; BERTOCO, J. Implementação numérica da equação do
+  telegrafista no Clawpack utilizando métodos de volumes finitos. In: **Anais
+  do VII Congresso Brasileiro Interdisciplinar em Ciência e Tecnologia**, 2026.
+  Resumo expandido, reproduzido em [`publicacoes/`](publicacoes/).
+- O estudo de autoconvergência com o termo fonte ativo tem relatório e resumo
+  expandido próprios, em
+  [`arquivos-roteiro-simulacoes/`](arquivos-roteiro-simulacoes/).
 
 ## Créditos e licença
 

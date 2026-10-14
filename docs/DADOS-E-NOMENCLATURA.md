@@ -42,6 +42,27 @@ $x_0 = 0$.
 | `resultados_autoconvergencia/experimento.json` | JSON | Parâmetros, versões, compilador e hashes dos fontes da execução |
 | `resultados_autoconvergencia/testes_sinteticos.json` | JSON | Resultado dos testes da rotina de erro, independentes do solver |
 | `resultados_autoconvergencia/ordens_diagnostico.json` | JSON | Razões registradas para erros ou ordens indisponíveis |
+| `resultados/convergencia_caso1/convergencia_caso1.csv` | `N, dx, tempo, e_l2_u, e_l2_u_media, e_inf_u, p_l2_u, e_l2_ut, e_inf_ut, p_l2_ut, e_l2_ux, e_inf_ux, p_l2_ux` | Erros e ordens do Caso 1, incluindo $u_t$ e $u_x$ |
+| `resultados/convergencia_caso1/convergencia_caso1_loglog.png` e `.pdf` | Figura | Erro $L^2$ em função de $\Delta x$, com declives de referência 1 e 2 |
+
+## 3.1 Scripts de pós-processamento
+
+| Script | Função |
+| --- | --- |
+| `convergencia_caso1.py` | Erros e ordens do Caso 1, com CSV e gráfico log–log; confere os valores contra os da monografia |
+| `arquivos-roteiro-simulacoes/executar_casos.py` | Executa os Casos 2 a 8 e registra parâmetros, amplitudes e perfis |
+| `arquivos-roteiro-simulacoes/gerar_figuras_comparativas.py` | Monta as figuras e tabelas comparativas dos Casos 2 a 8 |
+| `arquivos-roteiro-simulacoes/autoconvergencia.py` | Estudo de refinamento com o termo fonte ativo |
+
+Os scripts `comparar_malhas.py`, `plot_tensao.py`, `plot_evolucao_temporal.py`
+e `derivada_e_tensao.py`, na raiz, são material exploratório das primeiras
+etapas do trabalho. Eles geraram as figuras de verificação
+(`resultados/telegrafista_t_0.20.png`, `0.40` e `0.60`, e as comparações de
+malhas), mas têm uma limitação conhecida: estimam $u_t$ por diferença entre
+snapshots consecutivos, o que introduz erro de primeira ordem no tempo. A
+componente $u_t$ usada na monografia é a **segunda componente do estado**
+(`q2`), lida diretamente dos arquivos de saída, como fazem
+`convergencia_caso1.py` e o script de autoconvergência.
 
 ## 4. Correspondência com a monografia
 
