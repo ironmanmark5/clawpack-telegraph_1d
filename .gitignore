@@ -5,6 +5,9 @@ _output/
 _plots/
 __pycache__/
 
+#ignorar o conteúdo da pasta PRISM-conteudos, inclusive a propria pasta
+PRISM-conteudos/*
+
 # Garante que a pasta resultados NUNCA seja ignorada
 #!resultados/
 #!resultados/*.png

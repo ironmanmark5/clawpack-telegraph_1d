@@ -1,0 +1,35 @@
+# Arquivo de citacao do repositorio (Citation File Format).
+# TODO: atualizar a versao e a data por ocasiao da defesa.
+cff-version: 1.2.0
+message: "Se utilizar este material, por favor cite o repositorio e o trabalho."
+title: "Equacao do Telegrafista no Clawpack: material computacional de Trabalho de Conclusao de Curso"
+type: software
+authors:
+  - family-names: "Silva"
+    given-names: "Diogo Barbosa Ferreira da"
+    affiliation: "Universidade Federal de Lavras"
+license: BSD-3-Clause
+repository-code: "https://github.com/ironmanmark5/clawpack-telegraph_1d"
+version: "1.0.0"
+date-released: "2026-10-14"
+keywords:
+  - "equacao do telegrafista"
+  - "volumes finitos"
+  - "Clawpack"
+  - "problema de Riemann"
+  - "solucionador de Riemann"
+references:
+  - type: software
+    title: "Clawpack: Conservation Laws Package"
+    authors:
+      - name: "Clawpack Development Team"
+    doi: "10.17605/osf.io/kmw6h"
+    url: "https://www.clawpack.org"
+  - type: book
+    title: "Finite Volume Methods for Hyperbolic Problems"
+    authors:
+      - family-names: "LeVeque"
+        given-names: "Randall J."
+    publisher:
+      name: "Cambridge University Press"
+    year: 2002

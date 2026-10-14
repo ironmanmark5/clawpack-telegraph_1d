@@ -1,266 +1,138 @@
 # Equação do Telegrafista no Clawpack
 
-Implementação numérica da Equação do Telegrafista (caso homogêneo, equivalente à equação da onda) utilizando o framework **Clawpack**.
+Material computacional do Trabalho de Conclusão de Curso de graduação de
+**Diogo Barbosa Ferreira da Silva** (Universidade Federal de Lavras),
+orientado pela **Profa. DSc. Juliana Bertoco**.
 
-Este projeto foi desenvolvido como parte de um **Trabalho de Conclusão de Curso (TCC)** e tem como objetivo estudar a propagação de ondas, a implementação de solucionadores de Riemann e a análise de convergência de métodos de volumes finitos.
+O trabalho formula a equação do telegrafista como um sistema de primeira ordem,
+resolve a parte hiperbólica com um solucionador de Riemann próprio no
+[Clawpack](https://www.clawpack.org) e analisa numericamente o efeito dos
+coeficientes de amortecimento e de reação, da condição inicial e do
+refinamento da malha. Este repositório é o material externo vinculado à
+monografia: reúne os códigos, os scripts de automação e os resultados
+agregados.
 
----
+<!-- TODO: incluir aqui o link do PDF da monografia quando estiver publicado. -->
 
-## Problema Modelado
+## A equação e o sistema resolvido
 
-O caso homogêneo da Equação do Telegrafista é dado por:
+$$u_{tt} + a\,u_t = c^2 u_{xx} + b\,u$$
 
-```text
-∂²u/∂t² = c² ∂²u/∂x²
-```
+com as variáveis auxiliares $q_1 = u$, $q_2 = u_t$ e $q_3 = u_x$, resulta no
+sistema
 
-com condição inicial gaussiana:
+$$q_t + A q_x = \psi(q), \qquad
+A = \begin{pmatrix} 0 & 0 & 0 \\ 0 & 0 & -c^2 \\ 0 & -1 & 0 \end{pmatrix},
+\qquad
+\psi(q) = \begin{pmatrix} q_2 \\ b q_1 - a q_2 \\ 0 \end{pmatrix}.$$
 
-```text
-u(x,0) = exp(-βx²)
-u_t(x,0) = 0
-```
+Os autovalores de $A$ são $-c$, $0$ e $c$. O solucionador de Riemann decompõe o
+salto nas interfaces nessa base e o termo fonte $\psi(q)$ é aplicado por
+separação fracionária, após a etapa hiperbólica.
 
-onde:
+## Duas versões do programa
 
-* c = 2 (velocidade de propagação)
-* β = 200 (largura da gaussiana)
+| Versão | Pasta | Caso resolvido | Onde aparecem os resultados |
+| --- | --- | --- | --- |
+| Verificação | raiz do repositório | $a = b = 0$, equivalente à equação da onda | séries de refinamento com $N = 128$ a $2048$ |
+| Bateria do roteiro | `arquivos-roteiro-simulacoes/` | equação completa, com $c$, $a$, $b$, $\beta$ e $x_0$ configuráveis | Casos 2 a 8 e estudo de autoconvergência |
 
-A solução exata consiste em duas ondas gaussianas que se propagam em sentidos opostos:
+## Como reproduzir
 
-```text
-u(x,t) =
-½ exp[-β(x-ct)²]
-+
-½ exp[-β(x+ct)²]
-```
-
-Para utilização no Clawpack, a equação é reescrita como um sistema hiperbólico de primeira ordem:
-
-```text
-q_t + A q_x = 0
-```
-
-com:
-
-```text
-q = [u, u_t, u_x]ᵀ
-```
-
-e matriz de coeficientes:
-
-```text
-      | 0   0    0 |
-A  =  | 0   0  -c² |
-      | 0  -1    0 |
-```
-
-A discretização utiliza:
-
-* Método dos Volumes Finitos
-* Solver de Riemann personalizado
-* Esquema de segunda ordem
-* Limitadores MC (Monotonized Central)
-
----
-
-## Estrutura do Projeto
-
-```text
-telegraph_1d/
-├── Makefile
-├── README.md
-├── qinit.f90
-├── setprob.f90
-├── setrun.py
-├── setplot.py
-├── src1.f90
-├── comparar_malhas.py
-├── rodar.sh
-└── ...
-```
-
-### Arquivos Principais
-
-| Arquivo              | Função                                           |
-| -------------------- | ------------------------------------------------ |
-| `setrun.py`          | Configuração da malha, tempo final, CFL e saídas |
-| `setprob.f90`        | Leitura dos parâmetros físicos                   |
-| `qinit.f90`          | Definição da condição inicial                    |
-| `src1.f90`           | Implementação do sistema hiperbólico             |
-| `setplot.py`         | Geração dos gráficos                             |
-| `comparar_malhas.py` | Análise de erros e convergência                  |
-| `Makefile`           | Compilação e execução                            |
-
----
-
-## Requisitos
-
-* Python 3
-* Fortran (gfortran)
-* Clawpack 5.x
-
-Verifique sua instalação:
+Pré-requisitos: `make`, `gfortran`, Python 3 com `matplotlib` e a árvore de
+fontes do Clawpack. O projeto foi executado com Clawpack 5.14.0, `gfortran`
+16.2.1 e Python 3.14.7.
 
 ```bash
-python -c "import clawpack; print(clawpack.__version__)"
-```
-
----
-
-## Configuração do Ambiente
-
-Defina as variáveis de ambiente do Clawpack:
-
-```bash
-export CLAW=$(realpath ../../..)
+export CLAW=/caminho/para/clawpack
 export PYTHONPATH=$CLAW:$PYTHONPATH
 ```
 
----
-
-## Compilação
-
-Compile o executável:
+Bateria de casos (Casos 2 a 8), que gera as figuras comparativas:
 
 ```bash
+cd arquivos-roteiro-simulacoes
+python3 executar_casos.py --dry-run     # lista o que será executado
+python3 executar_casos.py
+python3 gerar_figuras_comparativas.py
+```
+
+Estudo de refinamento, com sete malhas de 32 a 2048 células:
+
+```bash
+python3 -m unittest -v test_autoconvergencia.py
+python3 autoconvergencia.py
+python3 autoconvergencia.py --somente-analisar
+```
+
+Verificação da implementação (Caso 1, $a = b = 0$), na raiz do repositório:
+
+```bash
+cp solver-referencia/rp1_telegraph.f90 $CLAW/riemann/src/
 make .exe
+make .output OUTDIR=output_malha_512
 ```
 
----
+O detalhamento de cada arquivo alterado e o motivo de cada alteração estão em
+[`docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md`](docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md).
 
-## Execução
-
-Execute a simulação:
-
-```bash
-make .output OUTDIR=output
-```
-
-Gerar gráficos:
-
-```bash
-make .plots OUTDIR=output PLOTDIR=plots
-```
-
----
-
-## Estudo de Convergência
-
-Torne o script executável:
-
-```bash
-chmod +x rodar.sh
-```
-
-Executar uma única malha:
-
-```bash
-./rodar.sh 200
-```
-
-Executar várias malhas:
-
-```bash
-for n in 50 100 200 400 800; do
-    ./rodar.sh $n
-done
-```
-
-Os resultados serão armazenados em diretórios separados para cada refinamento.
-
----
-
-## Pós-Processamento
-
-Após gerar as soluções:
-
-```bash
-python3 comparar_malhas.py
-```
-
-O script realiza:
-
-* Leitura dos arquivos de saída do Clawpack
-* Comparação com a solução exata
-* Cálculo do erro L²
-* Gráfico log-log de convergência
-* Comparação visual entre solução numérica e analítica
-
----
-
-## Parâmetros Físicos
-
-Definidos em `setprob.data`:
+## Estrutura do repositório
 
 ```text
-rho   = 1.0
-K     = 4.0
-beta  = 200.0
+.
+├── Makefile, setrun.py, setplot.py     # exemplo da raiz (a = b = 0)
+├── setprob.f90, qinit.f90, src1.f90    # rotinas do exemplo da raiz
+├── arquivos-roteiro-simulacoes/        # bateria de casos e autoconvergência
+│   ├── executar_casos.py
+│   ├── gerar_figuras_comparativas.py
+│   ├── autoconvergencia.py
+│   ├── setrun.py, setprob.f90, qinit.f90, src1.f90, rp1_telegraph.f90
+│   ├── resultados/                     # CSVs, figuras e metadados dos Casos 2 a 8
+│   ├── resultados_autoconvergencia/     # erros, ordens e figuras do refinamento
+│   └── resumo_autoconvergencia/         # resumo expandido para a orientação
+├── solver-referencia/                  # solucionador usado no Caso 1
+├── docs/                               # documentação das alterações
+├── CREDITS.md                          # créditos e atribuições
+├── LICENSE                             # licença BSD de três cláusulas
+└── CITATION.cff                        # como citar este material
 ```
 
-A velocidade da onda é calculada por:
+## Parâmetros
 
-```text
-c = sqrt(K/rho)
-```
+No exemplo da raiz, `setprob.data` traz $\rho = 1{,}0$ e $K = 4{,}0$, de modo
+que $c = \sqrt{K/\rho} = 2$, com $\beta = 200$. Na bateria do roteiro, os
+parâmetros são $c = 2$, $a$, $b$, $\beta$ e $x_0$, definidos caso a caso:
+Caso 2 varia $a$ com $b = 0$; Caso 3 varia $b$ com $a = 0$; Caso 4 usa
+$a = b = 1$; Caso 5 usa $a = 1$ e $b = -1$; Caso 6 usa a condição inicial
+deslocada, com $\beta = 25$ e $x_0 = 0{,}5$; Caso 7 varia $\beta$; e o Caso 8
+percorre a grade $a \in \{0;\,1;\,2\}$ por $b \in \{-1;\,0;\,1\}$.
 
-resultando em:
+A configuração numérica comum é o domínio $[-2, 2]$, tempo final $0{,}8$, CFL
+desejado $0{,}9$, correção hiperbólica de segunda ordem com limitador MC,
+separação da fonte no esquema de Godunov e contornos por extrapolação.
 
-```text
-c = 2
-```
+## Resultados
 
----
+Os resultados principais estão descritos na monografia e resumidos nos
+arquivos de cada pasta de saída:
 
-## Parâmetros Numéricos
+- `arquivos-roteiro-simulacoes/resultados/resumo.csv`: amplitude máxima de cada
+  configuração nos instantes 0,4 e 0,8;
+- `arquivos-roteiro-simulacoes/resultados/figuras_comparativas/`: comparações
+  entre casos, em PDF e PNG;
+- `arquivos-roteiro-simulacoes/resultados_autoconvergencia/autoconvergencia.csv`:
+  erros de refinamento e ordens observadas, com
+  `RELATORIO.md` descrevendo a metodologia e os limites da interpretação.
 
-Podem ser alterados em `setrun.py`:
+## Créditos e licença
 
-```python
-clawdata.num_cells[0]
-clawdata.tfinal
-clawdata.num_output_times
-clawdata.limiter
-clawdata.bc_lower[0]
-clawdata.bc_upper[0]
-```
+Toda a parte numérica é construída sobre o Clawpack, distribuído sob a licença
+BSD de três cláusulas. Os créditos ao pacote, à sua documentação e às
+referências que devem ser citadas estão em
+[`CREDITS.md`](CREDITS.md); o texto da licença está em [`LICENSE`](LICENSE).
 
-Exemplo:
+## Como citar
 
-```python
-clawdata.limiter = ['mc', 'mc', 'mc']
-```
-
----
-
-## Resultados Esperados
-
-A solução inicial gaussiana divide-se em duas ondas que se propagam simetricamente para a esquerda e para a direita com velocidade constante.
-
-O refinamento sucessivo da malha deve produzir:
-
-* Redução do erro L²
-* Aproximação da ordem teórica do método
-* Melhor concordância com a solução exata
-
----
-
-## Trabalhos Futuros
-
-* Inclusão de amortecimento
-* Inclusão de termos de reação
-* Operator Splitting
-* Equação completa do Telegrafista
-* Extensão para duas dimensões
-
----
-
-## Referências
-
-1. Randall J. LeVeque, *Finite Volume Methods for Hyperbolic Problems*, Cambridge University Press.
-
-2. Clawpack Documentation
-   https://www.clawpack.org
-
-3. Material teórico desenvolvido para o TCC.
+Consulte [`CITATION.cff`](CITATION.cff). Se este material contribuir para um
+trabalho acadêmico, cite também o Clawpack e as referências indicadas em
+`CREDITS.md`.
