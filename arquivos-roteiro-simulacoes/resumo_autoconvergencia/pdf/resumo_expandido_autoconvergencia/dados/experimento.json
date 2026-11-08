@@ -48,7 +48,7 @@
     "project_branch": "tcc-simulacoes",
     "working_tree_status": "M arquivos-roteiro-simulacoes/README.md\n M arquivos-roteiro-simulacoes/executar_casos.py\n M arquivos-roteiro-simulacoes/gerar_figuras_comparativas.py\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/LEIA-ME.md\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/amplitudes_tempos_comuns.csv\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_2_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_2_t0p8.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_3_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_3_t0p8.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_4_quatro_configuracoes_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_4_quatro_configuracoes_t0p8.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_5_comparacao_b_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_5_comparacao_b_t0p8.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_6_condicoes_iniciais.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_6_evolucao.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_6_versus_caso_5_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_6_versus_caso_5_t0p4.png\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_7_beta_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_7_beta_t0p8.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_7_condicoes_iniciais.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_8_diferencas_vs_b0.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_8_por_a_t0p4.pdf\n M arquivos-roteiro-simulacoes/resultados/figuras_comparativas/caso_8_por_a_t0p8.pdf\n M arquivos-roteiro-simulacoes/setrun.py\n?? arquivos-roteiro-simulacoes/AUTOCONVERGENCIA.md\n?? arquivos-roteiro-simulacoes/autoconvergencia.py\n?? arquivos-roteiro-simulacoes/resultados_autoconvergencia/\n?? arquivos-roteiro-simulacoes/test_autoconvergencia.py",
     "clawpack_version": "5.14.0",
-    "clawpack_installation": "/home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack",
+    "clawpack_installation": "$CLAW",
     "clawpack_discovery": "--claw",
     "classic_commit": "6b3dfe6419d9b389e2d04a372a7880c9e9c8349d",
     "compiler": "/usr/bin/gfortran",
@@ -85,12 +85,12 @@
       "make",
       "-B",
       ".exe",
-      "CLAW=/home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack",
+      "CLAW=$CLAW",
       "FC=/usr/bin/gfortran",
       "FFLAGS=-O2",
       "CLASSIC=../classic/setaux.f90 ../classic/bc1.f ../classic/b4step1.f90 ../classic/driver.f90 ../classic/claw1ez.f ../classic/claw1.f ../classic/copyq1.f ../classic/inlinelimiter.f90 ../classic/opendatafile.f ../classic/out1.f ../classic/step1.f90"
     ],
-    "make_dry_run": "/usr/bin/gfortran -O2 -o xclaw /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/setaux.f90 /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/bc1.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/b4step1.f90 /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/driver.f90 /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/claw1ez.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/claw1.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/copyq1.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/inlinelimiter.f90 /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/opendatafile.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/out1.f /home/iron/Documentos/UFLA-FACULDADE/TCC/Clawpack/clawpack/classic/src/1d/step1.f90 qinit.f90 setprob.f90 src1.f90 rp1_telegraph.f90"
+    "make_dry_run": "/usr/bin/gfortran -O2 -o xclaw $CLAW/classic/src/1d/setaux.f90 $CLAW/classic/src/1d/bc1.f $CLAW/classic/src/1d/b4step1.f90 $CLAW/classic/src/1d/driver.f90 $CLAW/classic/src/1d/claw1ez.f $CLAW/classic/src/1d/claw1.f $CLAW/classic/src/1d/copyq1.f $CLAW/classic/src/1d/inlinelimiter.f90 $CLAW/classic/src/1d/opendatafile.f $CLAW/classic/src/1d/out1.f $CLAW/classic/src/1d/step1.f90 qinit.f90 setprob.f90 src1.f90 rp1_telegraph.f90"
   },
   "diagnostic_verbosity": 1
 }

@@ -1,4 +1,7 @@
-PYTHON=/home/jubertoco/clawpack-env/bin/python
+# Interpretador Python usado nos alvos que chamam o setrun.py e o setplot.py.
+# Pode ser sobrescrito na linha de comando:
+#   make .plots PYTHON=/caminho/para/python
+PYTHON ?= python3
 # Makefile for Clawpack code in this directory.
 # This version only sets the local files and frequently changed
 # options, and then includes the standard makefile pointed to by CLAWMAKE.

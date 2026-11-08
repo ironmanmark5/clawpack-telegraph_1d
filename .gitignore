@@ -7,6 +7,8 @@ __pycache__/
 
 #ignorar o conteúdo da pasta PRISM-conteudos, inclusive a propria pasta
 PRISM-conteudos/*
+PRISM/*
+arquivo-PRISM-conteudos-15-10-2026/*
 
 # Garante que a pasta resultados NUNCA seja ignorada
 #!resultados/
@@ -34,3 +36,8 @@ pyclaw.log
 
 # documentos
 ANALISE_TCC.md
+
+# Material exploratorio que nao faz parte da monografia
+verificacao_heaviside.py
+resultados/heaviside/
+resultados/heaviside_1024/

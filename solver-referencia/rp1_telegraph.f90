@@ -2,14 +2,16 @@
 subroutine rp1(maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apdq)
 ! =====================================================
 
-! Riemann solver for the acoustics equations in 1D.
+! Riemann solver for the 1D telegrapher equation, written as a first-order
+! system with q(1) = u, q(2) = u_t and q(3) = u_x.
 
 ! waves:     3
-! equations:3
+! equations: 3
 
 ! Conserved quantities:
-!       1 pressure
-!       2 velocity
+!       1 u
+!       2 u_t
+!       3 u_x
 
 ! On input, ql contains the state vector at the left edge of each cell
 !           qr contains the state vector at the right edge of each cell
@@ -49,7 +51,7 @@ subroutine rp1(maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apdq)
 
 !     # split the jump in q at each interface into waves
 
-!     # find a1 and a2, the coefficients of the 2 eigenvectors:
+!     # coefficients of the three eigenvectors (a1, a2, a3):
     do 20 i = 2-mbc, mx+mbc
         delta(1) = ql(1,i) - qr(1,i-1) 
         delta(2) = ql(2,i) - qr(2,i-1)

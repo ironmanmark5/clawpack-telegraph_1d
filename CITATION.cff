@@ -1,8 +1,9 @@
-# Arquivo de citacao do repositorio (Citation File Format).
-# TODO: atualizar a versao e a data por ocasiao da defesa.
+# Arquivo de citação do repositório (Citation File Format).
+# Versão 1.1.0: reorganização do material de reprodução, mapa das figuras,
+# diffs em relação ao Clawpack original e referência upstream.
 cff-version: 1.2.0
-message: "Se utilizar este material, por favor cite o repositorio e o trabalho."
-title: "Equacao do Telegrafista no Clawpack: material computacional de Trabalho de Conclusao de Curso"
+message: "Se utilizar este material, por favor cite o repositório e o trabalho."
+title: "Equação do telegrafista no Clawpack: material computacional do Trabalho de Conclusão de Curso"
 type: software
 authors:
   - family-names: "Silva"
@@ -10,15 +11,25 @@ authors:
     affiliation: "Universidade Federal de Lavras"
 license: BSD-3-Clause
 repository-code: "https://github.com/ironmanmark5/clawpack-telegraph_1d"
-version: "1.0.0"
-date-released: "2026-10-14"
+version: "1.1.0"
+date-released: "2026-11-08"
 keywords:
-  - "equacao do telegrafista"
+  - "equação do telegrafista"
   - "volumes finitos"
   - "Clawpack"
   - "problema de Riemann"
   - "solucionador de Riemann"
 references:
+  - type: conference-paper
+    title: "Implementação numérica da equação do telegrafista no Clawpack utilizando métodos de volumes finitos"
+    authors:
+      - family-names: "Silva"
+        given-names: "Diogo Barbosa Ferreira da"
+      - family-names: "Bertoco"
+        given-names: "Juliana"
+    year: 2026
+    collection-title: "Anais do VII Congresso Brasileiro Interdisciplinar em Ciência e Tecnologia"
+    notes: "Resumo expandido; texto em publicacoes/"
   - type: software
     title: "Clawpack: Conservation Laws Package"
     authors:

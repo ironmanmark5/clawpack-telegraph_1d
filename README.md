@@ -12,7 +12,11 @@ refinamento da malha. Este repositório é o material externo vinculado à
 monografia: reúne os códigos, os scripts de automação e os resultados
 agregados.
 
-<!-- TODO: incluir aqui o link do PDF da monografia quando estiver publicado. -->
+> **Sobre o PDF da monografia.** A versão final do texto será publicada neste
+> repositório depois da defesa e da entrega no SIP/UFLA, quando não houver
+> mais correções pendentes da banca. Até lá, este repositório documenta o
+> material computacional e os resultados, e a citação do software está em
+> [`CITATION.cff`](CITATION.cff).
 
 ## Comece por aqui
 
@@ -31,6 +35,9 @@ resultados, o caminho é este:
    [`docs/DADOS-E-NOMENCLATURA.md`](docs/DADOS-E-NOMENCLATURA.md) explica a
    convenção dos nomes das configurações, as colunas de cada CSV e a
    correspondência entre cada caso e as seções, figuras e tabelas do texto.
+5. **Para saber qual script gera cada figura**:
+   [`docs/MAPA-DE-FIGURAS.md`](docs/MAPA-DE-FIGURAS.md) lista, figura por
+   figura, o script responsável, o comando e o arquivo de dados de entrada.
 
 ## A equação e o sistema resolvido
 
@@ -54,6 +61,13 @@ separação fracionária, após a etapa hiperbólica.
 | --- | --- | --- | --- |
 | Verificação | raiz do repositório | $a = b = 0$, equivalente à equação da onda | séries de refinamento com $N = 128$ a $2048$ |
 | Bateria do roteiro | `arquivos-roteiro-simulacoes/` | equação completa, com $c$, $a$, $b$, $\beta$ e $x_0$ configuráveis | Casos 2 a 8 e estudo de autoconvergência |
+
+## Escopo
+
+Este repositório cobre o que está na monografia: a verificação no caso
+$a=b=0$, os oito casos da bateria paramétrica e o estudo de autoconvergência
+com o termo fonte ativo. Experimentos exploratórios que não entraram no texto
+não fazem parte do material distribuído aqui.
 
 ## Onde cada arquivo deve ficar
 
@@ -88,8 +102,10 @@ bateria dos Casos 2 a 8 não precisa dessa cópia, porque tem o próprio
 apontando para ele.
 
 As rotinas efetivamente modificadas em relação ao exemplo acústico do Clawpack
-são cinco: `setprob.f90`, `setrun.py`, `qinit.f90`, `rp1_telegraph.f90` e
-`src1.f90`. O que cada uma mudou, e por quê, está em
+são quatro: `setrun.py`, `qinit.f90`, `rp1_telegraph.f90` e `src1.f90`. O
+`setprob.f90` da raiz é usado **sem alteração**, porque o caso da raiz mantém
+a leitura de $\rho$ e $K$ do exemplo acústico. O que cada arquivo mudou, e por
+quê, está em
 [`docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md`](docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md).
 
 
@@ -150,20 +166,27 @@ O detalhamento de cada arquivo alterado e o motivo de cada alteração estão em
 .
 ├── Makefile, setrun.py, setplot.py     # exemplo da raiz (a = b = 0)
 ├── setprob.f90, qinit.f90, src1.f90    # rotinas do exemplo da raiz
+├── convergencia_caso1.py               # erros e ordens do Caso 1 (Tabela 6.1)
+├── gerar_figuras_caso1.py              # figuras 6.1 e 6.2
 ├── arquivos-roteiro-simulacoes/        # bateria de casos e autoconvergência
 │   ├── executar_casos.py
 │   ├── gerar_figuras_comparativas.py
 │   ├── autoconvergencia.py
+│   ├── test_autoconvergencia.py
 │   ├── setrun.py, setprob.f90, qinit.f90, src1.f90, rp1_telegraph.f90
 │   ├── resultados/                     # CSVs, figuras e metadados dos Casos 2 a 8
 │   ├── resultados_autoconvergencia/     # erros, ordens e figuras do refinamento
 │   └── resumo_autoconvergencia/         # resumo expandido para a orientação
 ├── solver-referencia/                  # solucionador usado no Caso 1
+├── referencia-upstream/                # originais do Clawpack, sem alteração
+├── resultados/                         # séries e figuras do Caso 1
 ├── COMO-REPRODUZIR.md                  # guia passo a passo da reprodução
 ├── verificar-ambiente.sh               # confere compilador, Python e Clawpack
 ├── requirements.txt                    # dependências em Python
-├── docs/                               # alterações feitas e dicionário de dados
+├── docs/                               # alterações, diff e mapa das figuras
 │   ├── ALTERACOES-EM-RELACAO-AO-CLAWPACK.md
+│   ├── DIFERENCAS-EM-RELACAO-AO-UPSTREAM.diff
+│   ├── MAPA-DE-FIGURAS.md
 │   └── DADOS-E-NOMENCLATURA.md
 ├── CREDITS.md                          # créditos e atribuições
 ├── LICENSE                             # licença BSD de três cláusulas
@@ -216,6 +239,15 @@ referências que devem ser citadas estão em
 
 ## Como citar
 
-Consulte [`CITATION.cff`](CITATION.cff). Se este material contribuir para um
-trabalho acadêmico, cite também o Clawpack e as referências indicadas em
-`CREDITS.md`.
+Para citar este material no texto da monografia ou em outro trabalho:
+
+> SILVA, D. B. F. da. **Equação do telegrafista no Clawpack**: material
+> computacional do Trabalho de Conclusão de Curso. 2026. Repositório de
+> software. Disponível em:
+> <https://github.com/ironmanmark5/clawpack-telegraph_1d>. Acesso em: data.
+
+O arquivo [`CITATION.cff`](CITATION.cff) traz os mesmos dados em formato
+legível por máquina e uma versão do material para citação. Se este material
+contribuir para um trabalho acadêmico, cite também o Clawpack
+(DOI 10.17605/osf.io/kmw6h) e as referências indicadas em
+[`CREDITS.md`](CREDITS.md).

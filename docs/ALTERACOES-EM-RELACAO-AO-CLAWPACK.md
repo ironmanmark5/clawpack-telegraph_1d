@@ -6,11 +6,17 @@ trabalho. Ele corresponde, em forma resumida, ao Apêndice A da monografia.
 
 ## Ponto de partida
 
-O trabalho parte do exemplo `classic/examples/acoustics_1d`, distribuído com o
-*Clawpack*, que resolve um sistema acústico linear de duas ondas com um
-solucionador de Riemann próprio. Esse exemplo foi adaptado para a equação do
-telegrafista, escrita como um sistema de primeira ordem com três componentes e
-três ondas (velocidades $-c$, $0$ e $c$).
+O trabalho parte do exemplo `classic/examples/acoustics_1d_example1`,
+distribuído com o *Clawpack* (versão 5.14.0, árvore `v5.14.0-17-gc5b4fbe`),
+que resolve um sistema acústico linear de duas ondas com um solucionador de
+Riemann próprio. Esse exemplo foi adaptado para a equação do telegrafista,
+escrita como um sistema de primeira ordem com três componentes e três ondas
+(velocidades $-c$, $0$ e $c$).
+
+As cópias não modificadas dos arquivos de origem estão em
+[`referencia-upstream/`](../referencia-upstream/LEIA-ME.md), e as diferenças
+linha a linha estão em
+[`docs/DIFERENCAS-EM-RELACAO-AO-UPSTREAM.diff`](DIFERENCAS-EM-RELACAO-AO-UPSTREAM.diff).
 
 ## Duas versões do mesmo programa
 
@@ -28,19 +34,55 @@ conforme a tabela a seguir.
 | Arquivo | Origem | Alteração | Motivo |
 | --- | --- | --- | --- |
 | `setrun.py` (raiz) | `acoustics_1d/setrun.py` | número de equações e de ondas igual a três; limitador MC; separação da fonte; 64 instantes de saída | adequar o exemplo acústico ao sistema do telegrafista |
-| `setprob.f90` (raiz) | `acoustics_1d/setprob.f90` | leitura de $\rho$, $K$ e $\beta$, com $c = \sqrt{K/\rho}$; bloco comum `/cparam/ rho,bulk,cc,zz` | manter a formulação acústica, em que $a = b = 0$ |
+| `setprob.f90` (raiz) | `acoustics_1d_example1/setprob.f90` | **sem alteração**: lê $\rho$, $K$ e $\beta$ e calcula $c = \sqrt{K/\rho}$ | manter a formulação acústica, em que $a = b = 0$ |
 | `qinit.f90` (raiz) | `acoustics_1d/qinit.f90` | $q_1 = e^{-\beta x^2}$, $q_2 = 0$, $q_3 = -2\beta x\,e^{-\beta x^2}$ | definir a condição inicial gaussiana centrada na origem |
 | `src1.f90` (raiz) | `acoustics_1d/src1.f90` | somente $q_1 \leftarrow q_1 + \Delta t\,q_2$ | avançar $u$ por meio de $u_t$, já que o termo $b q_1 - a q_2$ se anula |
 | `solver-referencia/rp1_telegraph.f90` | `riemann/src/rp1_acoustics.f90` | três ondas, com autovalores $-c$, $0$ e $c$, e autovetores do sistema do telegrafista; parâmetros $\rho$ e $K$ | resolver o problema de Riemann do sistema; precisa ser copiado para `$CLAW/riemann/src/` |
 | `arquivos-roteiro-simulacoes/setprob.f90` | versão da raiz | leitura de $c$, $a$, $b$, $\beta$ e $x_0$; bloco comum `/cparam/ c,a,b` | incorporar amortecimento, reação e o centro do pulso |
 | `arquivos-roteiro-simulacoes/qinit.f90` | versão da raiz | $z = x - x_0$ na gaussiana e em sua derivada | permitir o pulso deslocado (Caso 6) e a variação de largura (Caso 7) |
 | `arquivos-roteiro-simulacoes/src1.f90` | versão da raiz | guarda $q_1$ e $q_2$ anteriores e atualiza as duas componentes: $q_2 \leftarrow q_2 + \Delta t\,(b q_1 - a q_2)$ | resolver a equação completa, com os dois termos do modelo |
-| `arquivos-roteiro-simulacoes/rp1_telegraph.f90` | `solver-referencia` | parâmetros $c$, $a$ e $b$ no lugar de $\rho$ e $K$ | alinhar o solucionador à formulação do telegrafista |
+| `arquivos-roteiro-simulacoes/rp1_telegraph.f90` | `solver-referencia` | parâmetros $c$, $a$ e $b$ no lugar de $\rho$ e $K$ | alinhar o solucionador à formulação do telegrafista; o `Makefile` da bateria compila esta cópia **na própria pasta**, sem precisar copiá-la para `$CLAW/riemann/src/` |
 | `arquivos-roteiro-simulacoes/setrun.py` | `setrun.py` da raiz | parâmetros $c$, $a$, $b$, $\beta$, $x_0$ e número de células como argumentos, com valores padrão | executar os casos do roteiro sem editar o arquivo |
 | `arquivos-roteiro-simulacoes/executar_casos.py` | novo | executa cada configuração de parâmetros, verifica as saídas e registra os metadados | automatizar e tornar reprodutível a bateria de casos |
 | `arquivos-roteiro-simulacoes/gerar_figuras_comparativas.py` | novo | comparações lado a lado entre configurações e casos | produzir as figuras dos Casos 2 a 8 |
 | `arquivos-roteiro-simulacoes/autoconvergencia.py` | novo | executa as sete malhas, restringe a solução fina à grossa e calcula erros e ordens | estudar a convergência com o termo fonte ativo |
 | `arquivos-roteiro-simulacoes/test_autoconvergencia.py` | novo | testes sintéticos da rotina de erro e ordem | verificar a automação independentemente do solver |
+
+## Resumo das diferenças linha a linha
+
+| Arquivo | Linhas alteradas | O que muda, em resumo |
+| --- | --- | --- |
+| `setrun.py` | +8 / −8 | domínio de $[-1,1]$ para $[-2,2]$; 2048 células; três equações e três ondas; limitador MC nas três famílias; 64 instantes de saída; `source_split = 1` |
+| `setprob.f90` | 0 / 0 | nenhuma alteração; o caso da raiz mantém a leitura de $\rho$, $K$ e $\beta$ |
+| `qinit.f90` | +11 / −2 | preenche as três componentes com a gaussiana e sua derivada |
+| `setplot.py` | +30 / −6 | rótulos e leitura das três componentes nas figuras |
+| `Makefile` | +6 / −2 | aponta para `rp1_telegraph.f90` em vez de `rp1_acoustics.f90`; troca o caminho fixo do Python por `PYTHON ?= python3` |
+| `src1.f90` | +12 / −11 | substitui a rotina vazia do pacote pela atualização de $u$ |
+| `solver-referencia/rp1_telegraph.f90` | +57 / −34 | solucionador de três ondas, com autovalores $-c$, $0$ e $c$, e cabeçalho comentado atualizado |
+
+O diff unificado completo, com o número de cada linha alterada, está em
+[`docs/DIFERENCAS-EM-RELACAO-AO-UPSTREAM.diff`](DIFERENCAS-EM-RELACAO-AO-UPSTREAM.diff).
+
+## Arquivos adicionados ao repositório
+
+Além das adaptações acima, o trabalho reúne arquivos que **não existem** no
+pacote original:
+
+| Arquivo | Onde deve ficar | Por quê |
+| --- | --- | --- |
+| `solver-referencia/rp1_telegraph.f90` | `$CLAW/riemann/src/` | o `Makefile` procura o solucionador fora da pasta do exemplo |
+| `gerar_figuras_caso1.py` | raiz | gera as figuras 6.1 e 6.2 a partir das séries `output_malha_*` |
+| `convergencia_caso1.py` | raiz | calcula erros e ordens do Caso 1 contra a solução de d'Alembert |
+| `arquivos-roteiro-simulacoes/setrun.py` | pasta da bateria | recebe $c$, $a$, $b$, $\beta$ e $x_0$ como argumentos |
+| `arquivos-roteiro-simulacoes/{qinit,setprob,src1}.f90` | pasta da bateria | condição inicial deslocada e fonte com os dois coeficientes |
+| `arquivos-roteiro-simulacoes/rp1_telegraph.f90` | permanece na pasta da bateria | mesma solução de Riemann, com $c$, $a$ e $b$ lidos do modelo; o `Makefile` local compila este arquivo |
+| `arquivos-roteiro-simulacoes/executar_casos.py` | pasta da bateria | executa os Casos 2 a 8 e registra metadados |
+| `arquivos-roteiro-simulacoes/gerar_figuras_comparativas.py` | pasta da bateria | gera as figuras 6.3 a 6.13 e as tabelas 6.2 a 6.7 |
+| `arquivos-roteiro-simulacoes/autoconvergencia.py` | pasta da bateria | executa as sete malhas e gera as figuras 6.14 a 6.16 e a tabela 6.8 |
+| `arquivos-roteiro-simulacoes/test_autoconvergencia.py` | pasta da bateria | testes sintéticos da automação |
+
+O mapa entre cada figura e tabela da monografia e o script que a gera está em
+[`docs/MAPA-DE-FIGURAS.md`](MAPA-DE-FIGURAS.md).
 
 ## O que não foi modificado
 

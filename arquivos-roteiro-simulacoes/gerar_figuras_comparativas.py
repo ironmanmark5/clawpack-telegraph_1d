@@ -51,6 +51,37 @@ def save(fig, destination: Path, name: str) -> None:
     plt.close(fig)
 
 
+PRIMEIRO_TEMPO_AMPLITUDE = 0.05
+"""As curvas de A(t) começam depois da separação inicial dos pulsos.
+
+No primeiro instante a amplitude vale aproximadamente 1, o pico da condição
+inicial. Manter esse ponto comprime a escala e esconde as diferenças de
+alguns milésimos que motivam as comparações de b.
+"""
+
+
+def estilo() -> None:
+    """Tamanhos de fonte e de figura adequados à largura da monografia.
+
+    As figuras entram no texto com 0,95 da largura da mancha, cerca de 14 cm.
+    Com figura de 9 a 10 polegadas, a redução fica em torno de 60%, de modo
+    que os rótulos chegam ao papel com aproximadamente 8 pt.
+    """
+    import matplotlib.pyplot as plt
+
+    plt.rcParams.update({
+        'font.size': 13,
+        'axes.titlesize': 13,
+        'axes.labelsize': 13,
+        'xtick.labelsize': 11,
+        'ytick.labelsize': 11,
+        'legend.fontsize': 11,
+        'axes.linewidth': 0.8,
+        'figure.dpi': 160,
+        'savefig.bbox': 'tight',
+    })
+
+
 def decorate(ax, *, xlabel: str, ylabel: str, title: str) -> None:
     ax.set(xlabel=xlabel, ylabel=ylabel, title=title)
     ax.grid(alpha=0.25)
@@ -60,23 +91,25 @@ def comparison(data_dir: Path, destination: Path, group, *, case: int,
                frame: int, name: str, detail: str = 'ab', note: str = '') -> None:
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4.5), layout='constrained')
+    fig, axes = plt.subplots(1, 2, figsize=(9.5, 4), layout='constrained')
     for params in group:
         time, x, u = frame_data(data_dir, params, frame)
         amplitude = read_amplitudes(path_for(data_dir, params))
         label = run_label(params, detail=detail)
         axes[0].plot(x, u, label=label, lw=1.8)
-        axes[1].plot([item[0] for item in amplitude],
-                     [item[1] for item in amplitude], label=label, lw=1.8)
+        instantes = [item[0] for item in amplitude if item[0] >= PRIMEIRO_TEMPO_AMPLITUDE]
+        valores = [item[1] for item in amplitude if item[0] >= PRIMEIRO_TEMPO_AMPLITUDE]
+        axes[1].plot(instantes, valores, label=label, lw=1.8)
     decorate(axes[0], xlabel='$x$', ylabel='$u(x,t)$',
              title=f'Caso {case}: perfis em $t={time:.1f}$')
     decorate(axes[1], xlabel='$t$', ylabel=r'$A(t)=\max_i |u_i(t)|$',
-             title='Amplitude máxima nos centros das células')
+             title=rf'Amplitude máxima após $t={PRIMEIRO_TEMPO_AMPLITUDE:.2f}$'
+                   .replace('.', '{,}'))
     axes[0].set_xlim(-2, 2)
     for ax in axes:
-        ax.legend(fontsize=9)
+        ax.legend(framealpha=0.95)
     if note:
-        fig.suptitle(note, fontsize=10)
+        fig.suptitle(note)
     save(fig, destination, name)
 
 
@@ -84,7 +117,7 @@ def initial_profiles(data_dir: Path, destination: Path, group, *, name: str,
                      title: str, detail: str) -> None:
     import matplotlib.pyplot as plt
 
-    fig, ax = plt.subplots(figsize=(8, 4.5), layout='constrained')
+    fig, ax = plt.subplots(figsize=(7.5, 4.2), layout='constrained')
     for params in group:
         _, x, u = frame_data(data_dir, params, 0)
         ax.plot(x, u, lw=1.8, label=run_label(params, detail=detail))
@@ -95,29 +128,35 @@ def initial_profiles(data_dir: Path, destination: Path, group, *, name: str,
 
 
 def case6_evolution(data_dir: Path, destination: Path) -> None:
+    """Cinco instantes do Caso 6, com rótulos legíveis na largura do TCC."""
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(2, 3, figsize=(13, 7.5), sharex=True, sharey=True,
+    fig, axes = plt.subplots(2, 3, figsize=(9.5, 5.6), sharex=True, sharey=True,
                              layout='constrained')
+    fig.get_layout_engine().set(w_pad=0.045, h_pad=0.06,
+                                wspace=0.035, hspace=0.06)
     for ax, frame in zip(axes.flat, (0, *FRAMES)):
         time, x, u = frame_data(data_dir, CASE6, frame)
         ax.plot(x, u, color='#0072B2', lw=1.8)
         decorate(ax, xlabel='$x$', ylabel='$u$', title=f'$t={time:.1f}$')
         ax.set(xlim=(-2, 2), ylim=(-0.05, 1.05))
+        ax.set_xlabel('$x$', fontsize=14, labelpad=2)
+        ax.set_ylabel('$u$', fontsize=14, labelpad=3)
+        ax.set_title(f'$t={time:.1f}$', fontsize=14, pad=5)
+        ax.set_xticks([-2, -1, 0, 1, 2])
+        ax.set_yticks([0, 0.2, 0.4, 0.6, 0.8, 1.0])
+        ax.tick_params(axis='both', labelsize=12, pad=2)
+        ax.tick_params(axis='x', labelbottom=True)
         if frame == 64:
             ax.axvline(2, color='#D55E00', ls='--', lw=1.2)
-            ax.text(0.02, 0.05, 'Pulso junto ao contorno direito',
-                    transform=ax.transAxes, fontsize=9, color='#A04000')
     axes.flat[-1].axis('off')
-    fig.suptitle('Caso 6: propagação do pulso largo e deslocado; '
-                 r'o pico direito chega perto de $x=2$ em $t\approx 0{,}75$')
     save(fig, destination, 'caso_6_evolucao')
 
 
 def case8_panels(data_dir: Path, destination: Path, frame: int) -> None:
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(3, 2, figsize=(12, 10), sharex='col',
+    fig, axes = plt.subplots(3, 2, figsize=(9.5, 7.8), sharex='col',
                              layout='constrained')
     for row, a in enumerate((0, 1, 2)):
         for b in (-1, 0, 1):
@@ -127,17 +166,17 @@ def case8_panels(data_dir: Path, destination: Path, frame: int) -> None:
             color = {-1: '#0072B2', 0: '#E69F00', 1: '#009E73'}[b]
             axes[row, 0].plot(x, u, color=color, lw=1.7,
                               label=rf'$b={b:g}$')
-            axes[row, 1].plot([item[0] for item in amplitude],
-                              [item[1] for item in amplitude],
+            instantes = [item[0] for item in amplitude if item[0] >= PRIMEIRO_TEMPO_AMPLITUDE]
+            valores = [item[1] for item in amplitude if item[0] >= PRIMEIRO_TEMPO_AMPLITUDE]
+            axes[row, 1].plot(instantes, valores,
                               color=color, lw=1.7, label=rf'$b={b:g}$')
         decorate(axes[row, 0], xlabel='$x$', ylabel='$u$',
                  title=rf'$a={a:g}$: perfis em $t={time:.1f}$')
         decorate(axes[row, 1], xlabel='$t$', ylabel=r'$A(t)$',
                  title=rf'$a={a:g}$: amplitude máxima')
         axes[row, 0].set_xlim(-2, 2)
-        axes[row, 0].legend(fontsize=9)
-        axes[row, 1].legend(fontsize=9)
-    fig.suptitle('Caso 8: comparação dos três valores de $b$ para cada $a$')
+        axes[row, 0].legend(framealpha=0.95)
+        axes[row, 1].legend(framealpha=0.95)
     save(fig, destination, f'caso_8_por_a_t{time:.1f}'.replace('.', 'p'))
 
 
@@ -145,7 +184,7 @@ def differences_from_b0(data_dir: Path, destination: Path) -> None:
     """Evidencia o efeito pequeno de b quando curvas completas se sobrepõem."""
     import matplotlib.pyplot as plt
 
-    fig, axes = plt.subplots(3, 2, figsize=(12, 9), sharex=True,
+    fig, axes = plt.subplots(3, 2, figsize=(9.5, 7), sharex=True,
                              layout='constrained')
     for row, a in enumerate((0, 1, 2)):
         for col, frame in enumerate((32, 64)):
@@ -160,7 +199,6 @@ def differences_from_b0(data_dir: Path, destination: Path) -> None:
                      title=rf'$a={a:g},\ t={time:.1f}$')
             axes[row, col].set_xlim(-2, 2)
             axes[row, col].legend()
-    fig.suptitle('Caso 8: alteração do perfil causada por mudar $b$ com $a$ fixo')
     save(fig, destination, 'caso_8_diferencas_vs_b0')
 
 
@@ -202,6 +240,7 @@ def main() -> None:
                         help='Pasta com as simulações completas.')
     args = parser.parse_args()
     data_dir = args.dados.expanduser().resolve()
+    estilo()
     groups = cases()
     required = dict.fromkeys([p for group in groups.values() for p in group])
     missing = [run_id(p) for p in required if not complete(path_for(data_dir, p), p)]
@@ -233,9 +272,7 @@ def main() -> None:
                [(1, -1, 200, 0), CASE6_SHIFT_COMPARISON], case=6,
                frame=32,
                name='caso_6_versus_caso_5_t0p4',
-               detail='initial',
-               note='Comparação controlada: a=1, b=-1 e beta=200; '
-                    'somente x0 muda de 0 para 0,5.')
+               detail='initial')
 
     initial_profiles(data_dir, destination, groups[7],
                      name='caso_7_condicoes_iniciais',

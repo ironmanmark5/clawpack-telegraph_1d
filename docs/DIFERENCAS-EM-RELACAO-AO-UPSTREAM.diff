@@ -1,0 +1,367 @@
+# Diferenças em relação aos arquivos originais do Clawpack
+#
+# Gerado automaticamente a partir de Clawpack v5.14.0 (v5.14.0-17-gc5b4fbe).
+# Formato unificado: "---" é o arquivo original, "+++" é o arquivo deste
+# repositório. As linhas numeradas são as do arquivo original e as do
+# arquivo alterado, respectivamente.
+
+==============================================================================
+setrun.py   (+8/-8 linhas)
+==============================================================================
+--- a/referencia-upstream/acoustics_1d_example1/setrun.py
++++ b/setrun.py
+@@ -57,11 +57,11 @@
+     clawdata.num_dim = num_dim
+     
+     # Lower and upper edge of computational domain:
+-    clawdata.lower[0] = -1.000000e+00          # xlower
+-    clawdata.upper[0] = 1.000000e+00          # xupper
++    clawdata.lower[0] = -2.000000e+00          # xlower
++    clawdata.upper[0] = 2.000000e+00          # xupper
+     
+     # Number of grid cells:
+-    clawdata.num_cells[0] = 400      # mx
++    clawdata.num_cells[0] = 2048
+     
+ 
+     # ---------------
+@@ -69,7 +69,7 @@
+     # ---------------
+ 
+     # Number of equations in the system:
+-    clawdata.num_eqn = 2
++    clawdata.num_eqn = 3
+ 
+     # Number of auxiliary variables in the aux array (initialized in setaux)
+     clawdata.num_aux = 0
+@@ -106,7 +106,7 @@
+     if clawdata.output_style==1:
+         # Output ntimes frames at equally spaced times up to tfinal:
+         # Can specify num_output_times = 0 for no output
+-        clawdata.num_output_times = 16
++        clawdata.num_output_times = 64
+         clawdata.tfinal = 0.800000
+         clawdata.output_t0 = True  # output at initial (or restart) time?
+         
+@@ -174,7 +174,7 @@
+     
+     
+     # Number of waves in the Riemann solution:
+-    clawdata.num_waves = 2
++    clawdata.num_waves = 3
+     
+     # List of limiters to use for each wave family:  
+     # Required:  len(limiter) == num_waves
+@@ -184,7 +184,7 @@
+     #   2 or 'superbee' ==> superbee
+     #   3 or 'vanleer'  ==> van Leer
+     #   4 or 'mc'       ==> MC limiter
+-    clawdata.limiter = ['mc', 'mc']
++    clawdata.limiter = ['mc', 'mc', 'mc']
+     
+     clawdata.use_fwaves = False    # True ==> use f-wave version of algorithms
+     
+@@ -192,7 +192,7 @@
+     #   src_split == 0 or 'none'    ==> no source term (src routine never called)
+     #   src_split == 1 or 'godunov' ==> Godunov (1st order) splitting used, 
+     #   src_split == 2 or 'strang'  ==> Strang (2nd order) splitting used,  not recommended.
+-    clawdata.source_split = 0
++    clawdata.source_split = 1
+     
+     
+     # --------------------
+
+==============================================================================
+setprob.f90   (+0/-0 linhas)
+==============================================================================
+
+
+==============================================================================
+qinit.f90   (+11/-2 linhas)
+==============================================================================
+--- a/referencia-upstream/acoustics_1d_example1/qinit.f90
++++ b/qinit.f90
+@@ -19,8 +19,17 @@
+  
+       do i=1,mx
+          xcell = xlower + (i-0.5d0)*dx
+-         q(1,i) = dexp(-beta * (xcell-0.3d0)**2)  
+-         q(2,i) = 0.d0
++	!q(1,i) = 0.d0
++
++	!q(2,i) = exp(-beta*xcell**2)
++
++	!q(3,i) = 0.d0
++
++        q(1,i) = exp(-beta*xcell**2)
++
++	q(2,i) = 0.d0
++
++	q(3,i) = -2.d0*beta*xcell*exp(-beta*xcell**2) 
+       enddo
+ 
+ end subroutine qinit
+
+==============================================================================
+setplot.py   (+30/-6 linhas)
+==============================================================================
+--- a/referencia-upstream/acoustics_1d_example1/setplot.py
++++ b/setplot.py
+@@ -16,7 +16,26 @@
+     Input:  plotdata, an instance of clawpack.visclaw.data.ClawPlotData.
+     Output: a modified version of plotdata.
+     
+-    """ 
++    """
++    """  solução exata:  u(x,t)=0.5*exp(−β(x−ct)^2_+ 0.5*​exp(−β(x+ct)^2) """ 
++  
++    import numpy as np
++
++    # solução analítica
++    def qtrue(current_data):
++
++        x = current_data.x
++        t = current_data.t
++
++        beta = 200.0
++        c = 2.0
++
++        q_exact = (
++            0.5*np.exp(-beta*(x-c*t)**2)
++            + 0.5*np.exp(-beta*(x+c*t)**2)
++        )
++
++        return q_exact    
+ 
+     if plotdata is None:
+         from clawpack.visclaw.data import ClawPlotData
+@@ -25,14 +44,14 @@
+     plotdata.clearfigures()  # clear any old figures,axes,items data
+ 
+     # Figure for q[0]
+-    plotfigure = plotdata.new_plotfigure(name='Pressure and Velocity', figno=1)
++    plotfigure = plotdata.new_plotfigure(name='Equação do Telegrafista', figno=1)
+ 
+     # Set up for axes in this figure:
+     plotaxes = plotfigure.new_plotaxes()
+     plotaxes.axescmd = 'subplot(2,1,1)'   # top figure
+     plotaxes.xlimits = 'auto'
+-    plotaxes.ylimits = [-.5,1.1]
+-    plotaxes.title = 'Pressure'
++    plotaxes.ylimits = 'auto'
++    plotaxes.title = 'Tensão elétrica'
+ 
+     # Set up for item on these axes:
+     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+@@ -40,15 +59,20 @@
+     plotitem.plotstyle = '-o'
+     plotitem.color = 'b'
+ 
++    # solução exata
+ 
++    plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
++    plotitem.plot_var = qtrue
++    plotitem.plotstyle = '--'
++    plotitem.color = 'r'
+     # Figure for q[1]
+ 
+     # Set up for axes in this figure:
+     plotaxes = plotfigure.new_plotaxes()
+     plotaxes.axescmd = 'subplot(2,1,2)'   # bottom figure
+     plotaxes.xlimits = 'auto'
+-    plotaxes.ylimits = [-.5,1.1]
+-    plotaxes.title = 'Velocity'
++    plotaxes.ylimits = 'auto'
++    plotaxes.title = 'Taxa de variação temporal da tensão'
+ 
+     # Set up for item on these axes:
+     plotitem = plotaxes.new_plotitem(plot_type='1d_plot')
+
+==============================================================================
+Makefile   (+6/-2 linhas)
+==============================================================================
+--- a/referencia-upstream/acoustics_1d_example1/Makefile
++++ b/Makefile
+@@ -1,4 +1,7 @@
+-
++# Interpretador Python usado nos alvos que chamam o setrun.py e o setplot.py.
++# Pode ser sobrescrito na linha de comando:
++#   make .plots PYTHON=/caminho/para/python
++PYTHON ?= python3
+ # Makefile for Clawpack code in this directory.
+ # This version only sets the local files and frequently changed
+ # options, and then includes the standard makefile pointed to by CLAWMAKE.
+@@ -50,7 +53,8 @@
+ SOURCES = \
+   qinit.f90 \
+   setprob.f90 \
+-  $(CLAW)/riemann/src/rp1_acoustics.f90
++  src1.f90\
++  $(CLAW)/riemann/src/rp1_telegraph.f90
+ 
+ #-------------------------------------------------------------------
+ # Include Makefile containing standard definitions and make options:
+
+==============================================================================
+src1.f90   (+12/-11 linhas)
+==============================================================================
+--- a/referencia-upstream/classic-src-1d/src1.f90
++++ b/src1.f90
+@@ -1,14 +1,15 @@
+ subroutine src1(meqn,mbc,mx,xlower,dx,q,maux,aux,t,dt)
+ 
+-    ! Called to update q by solving source term equation 
+-    ! $q_t = \psi(q)$ over time dt starting at time t.
+-    !
+-    ! This default version does nothing. 
+- 
+-    implicit none
+-    integer, intent(in) :: mbc,mx,meqn,maux
+-    real(kind=8), intent(in) :: xlower,dx,t,dt
+-    real(kind=8), intent(in) ::  aux(maux,1-mbc:mx+mbc)
+-    real(kind=8), intent(inout) ::  q(meqn,1-mbc:mx+mbc)
++    implicit double precision (a-h,o-z)
+ 
+-end subroutine src1
++    dimension q(meqn,1-mbc:mx+mbc)
++    dimension aux(maux,1-mbc:mx+mbc)
++
++    do i = 1,mx
++
++        q(1,i) = q(1,i) + dt*q(2,i)
++
++    end do
++
++    return
++end
+
+==============================================================================
+rp1_telegraph.f90   (+57/-34 linhas)
+==============================================================================
+--- a/referencia-upstream/riemann-src/rp1_acoustics.f90
++++ b/solver-referencia/rp1_telegraph.f90
+@@ -2,14 +2,16 @@
+ subroutine rp1(maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apdq)
+ ! =====================================================
+ 
+-! Riemann solver for the acoustics equations in 1D.
++! Riemann solver for the 1D telegrapher equation, written as a first-order
++! system with q(1) = u, q(2) = u_t and q(3) = u_x.
+ 
+-! waves:     2
+-! equations: 2
++! waves:     3
++! equations: 3
+ 
+ ! Conserved quantities:
+-!       1 pressure
+-!       2 velocity
++!       1 u
++!       2 u_t
++!       3 u_x
+ 
+ ! On input, ql contains the state vector at the left edge of each cell
+ !           qr contains the state vector at the right edge of each cell
+@@ -29,42 +31,63 @@
+ ! From the basic clawpack routines, this routine is called with ql = qr
+ 
+ 
+-    implicit none
++    implicit double precision (a-h,o-z)
+ 
+-    integer, intent(in) :: maxm, meqn, mwaves, mbc, mx, maux
+-    real(kind=8), intent(in) :: ql(meqn, 1-mbc:maxm+mbc),qr(meqn, 1-mbc:maxm+mbc)
++    dimension wave(meqn, mwaves, 1-mbc:maxm+mbc)
++    dimension    s(mwaves,1-mbc:maxm+mbc)
++    dimension   ql(meqn, 1-mbc:maxm+mbc)
++    dimension   qr(meqn, 1-mbc:maxm+mbc)
++    dimension apdq(meqn, 1-mbc:maxm+mbc)
++    dimension amdq(meqn, 1-mbc:maxm+mbc)
++
++!     local arrays
++!     ------------
++    dimension delta(3)
+ 
+-    real(kind=8), intent(out)  :: wave(meqn, mwaves, 1-mbc:maxm+mbc)
+-    real(kind=8), intent(out) :: s(mwaves,1-mbc:maxm+mbc)
+-    real(kind=8), intent(out) :: apdq(meqn, 1-mbc:maxm+mbc), amdq(meqn, 1-mbc:maxm+mbc)
+-
+-    real(kind=8) :: delta(2)
+-    real(kind=8) :: rho, bulk, cc, zz
+-    real(kind=8) :: a1, a2, auxl, auxr
+-    integer :: i, m
+-
+-    ! density, bulk modulus, and sound speed, and impedance of medium:
+-    ! (should be set in setprob.f)
++!     # density, bulk modulus, and sound speed, and impedence of medium:
++!     # (should be set in setprob.f)
+     common /cparam/ rho,bulk,cc,zz
+ 
++
+ !     # split the jump in q at each interface into waves
+ 
+-!     # find a1 and a2, the coefficients of the 2 eigenvectors:
++!     # coefficients of the three eigenvectors (a1, a2, a3):
+     do 20 i = 2-mbc, mx+mbc
+-        delta(1) = ql(1,i) - qr(1,i-1)
++        delta(1) = ql(1,i) - qr(1,i-1) 
+         delta(2) = ql(2,i) - qr(2,i-1)
+-        a1 = (-delta(1) + zz*delta(2)) / (2.d0*zz)
+-        a2 =  (delta(1) + zz*delta(2)) / (2.d0*zz)
+-    
+-    !        # Compute the waves.
+-    
+-        wave(1,1,i) = -a1*zz
+-        wave(2,1,i) = a1
+-        s(1,i) = -cc
++        delta(3) = ql(3,i) - qr(3,i-1)
++        
++	a1 = 0.5d0 * ( delta(3) + delta(2)/cc )
++
++        a2 = delta(1)
++
++        a3 = 0.5d0 * ( delta(3) - delta(2)/cc )
+     
+-        wave(1,2,i) = a2*zz
+-        wave(2,2,i) = a2
+-        s(2,i) = cc
++    	! wave 1  (lambda = -c)
++
++	wave(1,1,i) = 0.d0
++	wave(2,1,i) = a1*cc
++	wave(3,1,i) = a1
++
++	s(1,i) = -cc
++
++
++	! wave 2  (lambda = 0)
++
++	wave(1,2,i) = a2
++	wave(2,2,i) = 0.d0
++	wave(3,2,i) = 0.d0
++
++	s(2,i) = 0.d0
++
++
++	! wave 3  (lambda = +c)
++
++	wave(1,3,i) = 0.d0
++	wave(2,3,i) = -a3*cc
++	wave(3,3,i) = a3
++
++	s(3,i) = cc
+     
+     20 END DO
+ 
+@@ -74,8 +97,8 @@
+ 
+     do m=1,meqn
+         do i = 2-mbc, mx+mbc
+-            amdq(m,i) = s(1,i)*wave(m,1,i)
+-            apdq(m,i) = s(2,i)*wave(m,2,i)
++          amdq(m,i) = s(1,i)*wave(m,1,i)
++          apdq(m,i) = s(3,i)*wave(m,3,i)
+         end do
+     end do
+ 
+
