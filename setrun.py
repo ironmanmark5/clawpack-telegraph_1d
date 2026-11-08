@@ -6,12 +6,8 @@ that will be read in by the Fortran code.
     
 """ 
 
-from __future__ import absolute_import
-import os
-import numpy as np
-
 #------------------------------
-def setrun(claw_pkg='classic'):
+def setrun(claw_pkg='classic', *, num_cells=2048):
 #------------------------------
     
     """ 
@@ -19,6 +15,8 @@ def setrun(claw_pkg='classic'):
 
     INPUT:
         claw_pkg expected to be "classic" for this setrun.
+        num_cells: número de células físicas; o padrão histórico é 2048.
+        rodar.sh passa este argumento sem editar este arquivo.
 
     OUTPUT:
         rundata - object of class ClawRunData 
@@ -29,6 +27,8 @@ def setrun(claw_pkg='classic'):
     
     
     assert claw_pkg.lower() == 'classic',  "Expected claw_pkg = 'classic'"
+    if type(num_cells) is not int or num_cells < 2:
+        raise ValueError('num_cells deve ser um inteiro maior ou igual a 2')
 
     num_dim = 1
     rundata = data.ClawRunData(claw_pkg, num_dim)
@@ -61,7 +61,7 @@ def setrun(claw_pkg='classic'):
     clawdata.upper[0] = 2.000000e+00          # xupper
     
     # Number of grid cells:
-    clawdata.num_cells[0] = 2048
+    clawdata.num_cells[0] = num_cells
     
 
     # ---------------
@@ -169,7 +169,8 @@ def setrun(claw_pkg='classic'):
     # Method to be used:
     # ------------------
 
-    # Order of accuracy:  1 => Godunov,  2 => Lax-Wendroff plus limiters
+    # Ordem da etapa hiperbólica, não do esquema completo com a fonte:
+    # 1 => Godunov, 2 => correção de segunda ordem com limitadores.
     clawdata.order = 2
     
     
@@ -204,7 +205,7 @@ def setrun(claw_pkg='classic'):
     
     # Choice of BCs at xlower and xupper:
     #   0 or 'user'     => user specified (must modify bcNamr.f to use this option)
-    #   1 or 'extrap'   => extrapolation (non-reflecting outflow)
+    #   1 or 'extrap'   => cópia nas células fantasma; saída aproximadamente não reflexiva
     #   2 or 'periodic' => periodic (must specify this at both boundaries)
     #   3 or 'wall'     => solid wall for systems where q(2) is normal velocity
     

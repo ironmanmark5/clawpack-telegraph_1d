@@ -1,3 +1,4 @@
+# Material exploratorio: parametros fixos. Figuras finais: gerar_figuras_caso1.py.
 import matplotlib.pyplot as plt
 import numpy as np
 import os

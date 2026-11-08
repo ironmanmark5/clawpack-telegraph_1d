@@ -6,12 +6,7 @@ that will be read in by the Fortran code.
 
 """
 
-from __future__ import absolute_import
-
-"""   18/09
-import os
-import numpy as np
-"""
+import math
 
 #------------------------------
 def setrun(claw_pkg='classic', *, c=2.0, a=1.0, b=1.0,
@@ -23,6 +18,9 @@ def setrun(claw_pkg='classic', *, c=2.0, a=1.0, b=1.0,
 
     INPUT:
         claw_pkg expected to be "classic" for this setrun.
+        c, a, b, beta, x0: parâmetros do modelo e do pulso inicial.
+        num_cells: células físicas; o executor passa 400 por padrão,
+        enquanto a chamada direta desta função mantém o padrão 1024.
 
     OUTPUT:
         rundata - object of class ClawRunData
@@ -33,6 +31,10 @@ def setrun(claw_pkg='classic', *, c=2.0, a=1.0, b=1.0,
 
 
     assert claw_pkg.lower() == 'classic',  "Expected claw_pkg = 'classic'"
+    if type(num_cells) is not int or num_cells < 2:
+        raise ValueError('num_cells deve ser um inteiro maior ou igual a 2')
+    if not all(math.isfinite(v) for v in (c, a, b, beta, x0)) or c <= 0 or beta <= 0:
+        raise ValueError('parametros devem ser finitos, com c > 0 e beta > 0')
 
     num_dim = 1
     rundata = data.ClawRunData(claw_pkg, num_dim)
@@ -41,11 +43,6 @@ def setrun(claw_pkg='classic', *, c=2.0, a=1.0, b=1.0,
     # Problem-specific parameters to be written to setprob.data:
     #------------------------------------------------------------------
     probdata = rundata.new_UserData(name='probdata', fname='setprob.data')
-   # 18/09
-   # probdata.add_param('rho',  1.0,  'density of medium')
-   # probdata.add_param('K',    4.0,  'bulk modulus')
-   #
-
     probdata.add_param('c', c, 'wave propagation speed')
     probdata.add_param('a', a, 'damping coefficient')
     probdata.add_param('b', b, 'reactive coefficient')
@@ -180,7 +177,8 @@ def setrun(claw_pkg='classic', *, c=2.0, a=1.0, b=1.0,
     # Method to be used:
     # ------------------
 
-    # Order of accuracy:  1 => Godunov,  2 => Lax-Wendroff plus limiters
+    # Ordem da etapa hiperbólica, não do esquema completo com a fonte:
+    # 1 => Godunov, 2 => correção de segunda ordem com limitadores.
     clawdata.order = 2
 
 
@@ -215,7 +213,7 @@ def setrun(claw_pkg='classic', *, c=2.0, a=1.0, b=1.0,
 
     # Choice of BCs at xlower and xupper:
     #   0 or 'user'     => user specified (must modify bcNamr.f to use this option)
-    #   1 or 'extrap'   => extrapolation (non-reflecting outflow)
+    #   1 or 'extrap'   => cópia nas células fantasma; saída aproximadamente não reflexiva
     #   2 or 'periodic' => periodic (must specify this at both boundaries)
     #   3 or 'wall'     => solid wall for systems where q(2) is normal velocity
 

@@ -34,7 +34,7 @@ from pathlib import Path
 
 PADRAO_SERIE = re.compile(r"^output_malha_(\d+)$")
 
-# Valores documentados na Secao 5.1 da monografia, para conferencia.
+# Valores da Tabela 6.1 da monografia, para conferencia no caso documentado.
 # A coluna de erro usa a norma L2 discreta ponderada por dx, em t = 0,4,
 # comparando q1 com a solucao exata avaliada no centro da celula.
 REFERENCIA = {
@@ -48,6 +48,13 @@ REFERENCIA = {
     "p_l2_u": {256: 1.299, 512: 0.966, 1024: 0.899, 2048: 0.987},
 }
 
+TOL_TEMPO = 1e-10
+
+
+def numero(texto: str) -> float:
+    """Aceita também expoentes Fortran D/d, sem arredondar os valores."""
+    return float(texto.replace("D", "E").replace("d", "e"))
+
 
 def ler_parametros(pasta: Path) -> tuple[float, float]:
     """Le rho, K e beta do setprob.data e devolve (c, beta)."""
@@ -55,7 +62,9 @@ def ler_parametros(pasta: Path) -> tuple[float, float]:
     for linha in (pasta / "setprob.data").read_text(encoding="utf-8").splitlines():
         if not linha.strip() or linha.lstrip().startswith("#"):
             continue
-        valores.append(float(linha.split("=")[0]))
+        valores.append(numero(linha.split("=")[0]))
+    if len(valores) != 3 or not all(math.isfinite(v) and v > 0 for v in valores):
+        raise ValueError(f"{pasta}: esperados rho, K e beta positivos e finitos")
     rho, K, beta = valores[0], valores[1], valores[2]
     return math.sqrt(K / rho), beta
 
@@ -70,25 +79,41 @@ def indices_disponiveis(pasta: Path) -> list[int]:
 
 
 def ler_tempo(pasta: Path, indice: int) -> float:
-    return float((pasta / f"fort.t{indice:04d}").read_text().split()[0])
+    tempo = numero((pasta / f"fort.t{indice:04d}").read_text().split()[0])
+    if not math.isfinite(tempo):
+        raise ValueError(f"{pasta}: tempo nao finito no quadro {indice}")
+    return tempo
 
 
 def ler_quadro(pasta: Path, indice: int):
     """Le um arquivo fort.qNNNN e devolve (mx, xlow, dx, q1, q2, q3)."""
     linhas = (pasta / f"fort.q{indice:04d}").read_text(encoding="utf-8").splitlines()
     mx = int(linhas[2].split()[0])
-    xlow = float(linhas[3].split()[0])
-    dx = float(linhas[4].split()[0])
-    dados = [[float(v) for v in linhas[6 + i].split()] for i in range(mx)]
+    xlow = numero(linhas[3].split()[0])
+    dx = numero(linhas[4].split()[0])
+    if mx < 1 or not math.isfinite(xlow) or not math.isfinite(dx) or dx <= 0:
+        raise ValueError(f"{pasta}: geometria invalida no quadro {indice}")
+    dados = [[numero(v) for v in linha.split()] for linha in linhas[6:] if linha.strip()]
+    if len(dados) != mx or any(len(row) != 3 or not all(map(math.isfinite, row)) for row in dados):
+        raise ValueError(f"{pasta}: quadro {indice} deve ter {mx} celulas e tres componentes finitas")
+    cabecalho = (pasta / f"fort.t{indice:04d}").read_text().splitlines()
+    if ([int(cabecalho[i].split()[0]) for i in (1, 2, 3, 4)] != [3, 1, 0, 1]
+            or cabecalho[6].split()[0] != "ascii"):
+        raise ValueError(f"{pasta}: esperado Classic 1D, uma malha e tres componentes ASCII")
     return mx, xlow, dx, [linha[0] for linha in dados], \
         [linha[1] for linha in dados], [linha[2] for linha in dados]
 
 
 def quadro_mais_proximo(pasta: Path, tempo: float) -> int:
+    if not math.isfinite(tempo):
+        raise ValueError("o tempo solicitado deve ser finito")
     indices = indices_disponiveis(pasta)
     if not indices:
         raise SystemExit(f"nenhum arquivo fort.t* encontrado em {pasta}")
-    return min(indices, key=lambda i: abs(ler_tempo(pasta, i) - tempo))
+    indice = min(indices, key=lambda i: abs(ler_tempo(pasta, i) - tempo))
+    if not math.isclose(ler_tempo(pasta, indice), tempo, rel_tol=0., abs_tol=TOL_TEMPO):
+        raise ValueError(f"{pasta}: nao existe quadro em t={tempo} (tolerancia {TOL_TEMPO:g})")
+    return indice
 
 
 def g(xi: float, beta: float) -> float:
@@ -128,7 +153,8 @@ def erros(pasta: Path, tempo: float):
     tempo_lido = ler_tempo(pasta, indice)
     mx, xlow, dx, q1, q2, q3 = ler_quadro(pasta, indice)
     centros = [xlow + (i + 0.5) * dx for i in range(mx)]
-    resultado = {"N": mx, "dx": dx, "tempo": tempo_lido}
+    resultado = {"N": mx, "dx": dx, "tempo": tempo_lido,
+                 "c": c, "beta": beta, "lower": xlow, "upper": xlow + mx * dx}
     for nome, numerico, exata in (
         ("u", q1, u_exata),
         ("ut", q2, ut_exata),
@@ -146,8 +172,32 @@ def erros(pasta: Path, tempo: float):
     return resultado
 
 
-def ordem(erro_grosso: float, erro_fino: float) -> float:
-    return math.log(erro_grosso / erro_fino) / math.log(2.0)
+def ordem(erro_grosso: float, erro_fino: float, razao: float = 2.0) -> float:
+    """Usa a razão efetiva dos espaçamentos; zero/não finito não define ordem."""
+    if not math.isfinite(razao) or razao <= 1:
+        raise ValueError("a razao de refinamento deve ser finita e maior que um")
+    if not all(math.isfinite(e) and e > 0 for e in (erro_grosso, erro_fino)):
+        return math.nan
+    quociente = erro_grosso / erro_fino
+    if not math.isfinite(quociente) or quociente <= 0:
+        return math.nan
+    return math.log(quociente) / math.log(razao)
+
+
+def calcular_ordens(linhas: list[dict]) -> None:
+    """Rejeita séries incompatíveis antes de comparar seus erros."""
+    linhas.sort(key=lambda linha: linha["N"])
+    if len({linha["N"] for linha in linhas}) != len(linhas):
+        raise ValueError("ha malhas repetidas na comparacao")
+    for anterior, atual in zip(linhas, linhas[1:]):
+        for chave in ("c", "beta", "lower", "upper", "tempo"):
+            if not math.isclose(anterior[chave], atual[chave], rel_tol=0., abs_tol=TOL_TEMPO):
+                raise ValueError(f"series com {chave} diferentes nao podem ser comparadas")
+        razao = anterior["dx"] / atual["dx"]
+        atual["N_anterior"] = anterior["N"]
+        for componente in ("u", "ut", "ux"):
+            atual[f"p_l2_{componente}"] = ordem(
+                anterior[f"e_l2_{componente}"], atual[f"e_l2_{componente}"], razao)
 
 
 def series_disponiveis(base: Path) -> list[Path]:
@@ -195,6 +245,7 @@ def gerar_figura(caminho: Path, linhas: list[dict]) -> None:
     figura.tight_layout()
     figura.savefig(caminho.with_suffix(".png"), dpi=200)
     figura.savefig(caminho.with_suffix(".pdf"))
+    plt.close(figura)
 
 
 def imprimir_tabela(linhas: list[dict]) -> None:
@@ -214,7 +265,14 @@ def imprimir_tabela(linhas: list[dict]) -> None:
               f"{numero('e_l2_ux')} {ordem_txt('p_l2_ux')}")
 
 
-def conferir(linhas: list[dict]) -> None:
+def conferir(linhas: list[dict]) -> int:
+    linhas = [linha for linha in linhas
+              if all(math.isclose(linha[chave], valor, rel_tol=0., abs_tol=TOL_TEMPO)
+                     for chave, valor in (("tempo", .4), ("c", 2.), ("beta", 200.),
+                                          ("lower", -2.), ("upper", 2.)))]
+    if not linhas:
+        print("\nConferencia da monografia nao se aplica a este tempo/parametros/dominio.")
+        return 0
     print("\nConferencia com os valores da monografia (t = 0,4):")
     pendencias = 0
     for linha in linhas:
@@ -232,7 +290,8 @@ def conferir(linhas: list[dict]) -> None:
     for linha in linhas:
         N = linha["N"]
         esperado = REFERENCIA["p_l2_u"].get(N)
-        if esperado is None or linha.get("p_l2_u") is None:
+        if (esperado is None or linha.get("p_l2_u") is None
+                or linha.get("N_anterior") != N // 2):
             continue
         desvio = abs(linha["p_l2_u"] - esperado)
         marca = "ok" if desvio < 5e-3 else "DIVERGE"
@@ -242,6 +301,7 @@ def conferir(linhas: list[dict]) -> None:
               f"documentado={esperado:.4f}  desvio={desvio:.2e}  {marca}")
     print("  Nenhuma divergencia." if not pendencias
           else f"  {pendencias} divergencia(s) a investigar.")
+    return pendencias
 
 
 def main() -> None:
@@ -261,12 +321,11 @@ def main() -> None:
     if not pastas:
         raise SystemExit("nenhuma serie output_malha_* encontrada")
 
-    linhas = [erros(pasta, argumentos.tempo) for pasta in pastas]
-    linhas.sort(key=lambda linha: linha["N"])
-    for anterior, atual in zip(linhas, linhas[1:]):
-        for componente in ("u", "ut", "ux"):
-            atual[f"p_l2_{componente}"] = ordem(
-                anterior[f"e_l2_{componente}"], atual[f"e_l2_{componente}"])
+    try:
+        linhas = [erros(pasta, argumentos.tempo) for pasta in pastas]
+        calcular_ordens(linhas)
+    except (OSError, ValueError, IndexError) as exc:
+        analisador.error(str(exc))
 
     argumentos.saida.mkdir(parents=True, exist_ok=True)
     escrever_csv(argumentos.saida / "convergencia_caso1.csv", linhas)
@@ -274,8 +333,10 @@ def main() -> None:
         gerar_figura(argumentos.saida / "convergencia_caso1_loglog", linhas)
 
     imprimir_tabela(linhas)
-    conferir(linhas)
+    pendencias = conferir(linhas)
     print(f"\nArquivos gravados em {argumentos.saida}")
+    if pendencias:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

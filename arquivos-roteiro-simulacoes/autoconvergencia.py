@@ -568,10 +568,11 @@ def report(output, rows, runs, frames):
              'Esses valores não são resultados do solver.\n',
              'experimento.json registra commit/branch, estado sujo, versão do Clawpack, compilador, '
              'flags, lista dos fontes realmente compilados, hashes e comando de build. '
-             'O executável foi recompilado à força a partir de snapshots dos fontes atuais do '
+              'O executável da bateria foi compilado a partir dos snapshots dos fontes do '
              'Makefile desta aplicação, em build/, sem usar os fontes antigos da raiz. '
-             'A árvore de trabalho já tinha alterações não commitadas; hashes e snapshots identificam '
-             'o código efetivo, além do commit. Arquivos antigos dos Casos 2–8 foram preservados.\n',
+              'O estado da árvore de trabalho de cada execução está registrado nos metadados; '
+              'hashes e snapshots identificam o código efetivo, além do commit. '
+              'A branch é informação histórica, não um requisito para reproduzir o estudo.\n',
              '## Reprodução\n',
              'A partir de arquivos-roteiro-simulacoes/:\n',
              '```bash\npython3 -m unittest -v test_autoconvergencia.py\n'
@@ -580,9 +581,10 @@ def report(output, rows, runs, frames):
              'Use --claw /caminho/para/clawpack ou CLAW quando necessário. '
              'A descoberta consulta essa configuração, o pacote instalado e instalações nos diretórios '
              'ancestrais. --saida é relativo a esta pasta; use outra pasta para um build/configuração '
-             'incompatível com execuções existentes. Não é preciso instalar dependências ou criar ambiente virtual.\n',
-             'Pendências: não há bloqueio de execução. Os materiais não foram incorporados à monografia '
-             'e não houve publicação, commit, push ou PR.']
+              'incompatível com execuções existentes. As dependências devem estar previamente disponíveis.\n',
+              'Este relatório descreve os dados analisados. Não determina o estado de entrega da '
+              'monografia nem de publicação do repositório. Os registros históricos de execução '
+              'não são reescritos para corresponder a uma revisão posterior dos fontes.']
     (output / 'RELATORIO.md').write_text('\n'.join(text)+'\n')
 
 
@@ -599,8 +601,7 @@ def main():
     if args.testes:
         print(json.dumps(checks, indent=2, ensure_ascii=False))
         return
-    if command(['git', 'branch', '--show-current']) != 'tcc-simulacoes':
-        parser.error('Este experimento deve ser executado na branch tcc-simulacoes.')
+    # A proveniencia registra a branch no build, mas seu nome nao afeta o metodo.
     output = args.saida.expanduser()
     if not output.is_absolute():
         output = ROOT / output

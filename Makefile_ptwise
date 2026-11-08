@@ -1,4 +1,5 @@
-
+# LEGADO ACUSTICO: nao usar para reproduzir o sistema de tres componentes.
+# Os resultados do TCC usam Makefile (sem sufixo), nao esta alternativa.
 # Makefile for Clawpack code in this directory.
 # This version only sets the local files and frequently changed
 # options, and then includes the standard makefile pointed to by CLAWMAKE.
@@ -57,4 +58,3 @@ SOURCES = \
 #-------------------------------------------------------------------
 # Include Makefile containing standard definitions and make options:
 include $(CLAWMAKE)
-

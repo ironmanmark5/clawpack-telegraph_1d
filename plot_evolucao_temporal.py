@@ -1,3 +1,5 @@
+# Material exploratorio: a derivada abaixo usa diferenca progressiva entre
+# quadros. As analises finais leem u_t diretamente da segunda componente.
 import matplotlib.pyplot as plt
 import numpy as np
 import os

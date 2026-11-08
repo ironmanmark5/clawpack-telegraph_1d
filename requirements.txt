@@ -2,4 +2,4 @@
 # O Clawpack nao entra aqui: ele deve ser obtido separadamente, conforme
 # o guia COMO-REPRODUZIR.md, e localizado pelas variaveis CLAW e PYTHONPATH.
 numpy
-matplotlib
+matplotlib>=3.6

@@ -1,3 +1,5 @@
+# Material exploratorio: estima u_t entre quadros, nao le a componente q2.
+# Para os resultados finais, usar os leitores e geradores documentados em docs/.
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -47,7 +49,7 @@ def carregar_u(t):
     return x, u
 
 def derivada_temporal(t, dt=None):
-    """Calcula u_t por diferença finita centrada ou progressiva."""
+    """Estima u_t por diferença progressiva entre dois quadros de saída."""
     if dt is None:
         dt = tfinal / num_output_times   # passo de tempo entre frames
     x1, u1 = carregar_u(t)
@@ -107,7 +109,7 @@ for t in tempos:
     fig.suptitle(f'Malha (N = {melhor_malha}) — t = {t:.2f}', fontsize=14)
     plt.tight_layout(rect=[0, 0, 1, 0.96])  # ajusta para não sobrepor o título
 
-    # Salva a figura em EPS (vetorial) e também PNG (para visualização rápida)
+    # Salva a figura em PDF (vetorial) e PNG (para visualização rápida).
     nome_base = f'resultados/derivadas/frame_u_ut_t_{t:.2f}'.replace('.', '_')
     plt.savefig(nome_base + '.pdf', format='pdf', bbox_inches='tight', pad_inches=0.02)
     plt.savefig(nome_base + '.png', dpi=300, bbox_inches='tight', pad_inches=0.02)

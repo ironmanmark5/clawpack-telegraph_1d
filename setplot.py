@@ -4,6 +4,11 @@ Set up the plot figures, axes, and items to be done for each frame.
 
 This module is imported by the plotting routines and then the
 function setplot is called to set the plot parameters.
+
+Visualização direta do Caso 1. A referência analítica abaixo pressupõe
+c=2, beta=200 e a=b=0; para outros parâmetros, prefira gerar_figuras_caso1.py,
+que lê os parâmetros efetivos das saídas. Não é o gerador das figuras finais
+dos Casos 2–8.
     
 """ 
 
@@ -17,7 +22,7 @@ def setplot(plotdata=None):
     Output: a modified version of plotdata.
     
     """
-    """  solução exata:  u(x,t)=0.5*exp(−β(x−ct)^2_+ 0.5*​exp(−β(x+ct)^2) """ 
+    # Solução de d'Alembert: u(x,t) = [g(x-ct) + g(x+ct)]/2.
   
     import numpy as np
 

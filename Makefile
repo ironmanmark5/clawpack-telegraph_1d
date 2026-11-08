@@ -1,7 +1,8 @@
 # Interpretador Python usado nos alvos que chamam o setrun.py e o setplot.py.
 # Pode ser sobrescrito na linha de comando:
-#   make .plots PYTHON=/caminho/para/python
-PYTHON ?= python3
+#   make plots CLAW_PYTHON=/caminho/para/python3
+# Makefile.common consulta CLAW_PYTHON, não PYTHON.
+CLAW_PYTHON ?= python3
 # Makefile for Clawpack code in this directory.
 # This version only sets the local files and frequently changed
 # options, and then includes the standard makefile pointed to by CLAWMAKE.
@@ -59,4 +60,3 @@ SOURCES = \
 #-------------------------------------------------------------------
 # Include Makefile containing standard definitions and make options:
 include $(CLAWMAKE)
-

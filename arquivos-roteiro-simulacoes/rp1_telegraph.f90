@@ -23,12 +23,12 @@ subroutine rp1(maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apdq)
 !            amdq = A^- Delta q,
 !            apdq = A^+ Delta q,
 !                   the decomposition of the flux difference
-!                       f(qr(i-1)) - f(ql(i))
+!                       f(ql(:,i)) - f(qr(:,i-1))
 !                   into leftgoing and rightgoing parts respectively.
 !
 
-! Note that the i'th Riemann problem has left state qr(i-1,:)
-!                                    and right state ql(i,:)
+! Note that the i'th Riemann problem has left state qr(:,i-1)
+!                                    and right state ql(:,i)
 ! From the basic clawpack routines, this routine is called with ql = qr
 
 
@@ -52,7 +52,8 @@ subroutine rp1(maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apdq)
 
 !     # split the jump in q at each interface into waves
 
-!     # find a1 and a2, the coefficients of the 2 eigenvectors:
+!     # a1, a2, a3 are the coefficients of the three eigenvectors.
+!     # The jump is right minus left; this routine assumes c > 0.
     do 20 i = 2-mbc, mx+mbc
         delta(1) = ql(1,i) - qr(1,i-1)
         delta(2) = ql(2,i) - qr(2,i-1)

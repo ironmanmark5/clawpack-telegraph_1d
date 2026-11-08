@@ -8,7 +8,7 @@ subroutine rp1(maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apdq)
 ! waves:     3
 ! equations: 3
 
-! Conserved quantities:
+! State components (the full system includes source terms):
 !       1 u
 !       2 u_t
 !       3 u_x
@@ -22,12 +22,12 @@ subroutine rp1(maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apdq)
 !            amdq = A^- Delta q,
 !            apdq = A^+ Delta q,
 !                   the decomposition of the flux difference
-!                       f(qr(i-1)) - f(ql(i))
+!                       f(ql(:,i)) - f(qr(:,i-1))
 !                   into leftgoing and rightgoing parts respectively.
 ! 
 
-! Note that the i'th Riemann problem has left state qr(i-1,:)
-!                                    and right state ql(i,:)
+! Note that the i'th Riemann problem has left state qr(:,i-1)
+!                                    and right state ql(:,i)
 ! From the basic clawpack routines, this routine is called with ql = qr
 
 
@@ -93,7 +93,8 @@ subroutine rp1(maxm,meqn,mwaves,maux,mbc,mx,ql,qr,auxl,auxr,wave,s,amdq,apdq)
 
 
 !     # compute the leftgoing and rightgoing flux differences:
-!     # Note s(1,i) < 0   and   s(2,i) > 0.
+!     # s(1,i) = -c, s(2,i) = 0, s(3,i) = c, with c > 0.
+!     # The stationary wave contributes to neither fluctuation.
 
     do m=1,meqn
         do i = 2-mbc, mx+mbc

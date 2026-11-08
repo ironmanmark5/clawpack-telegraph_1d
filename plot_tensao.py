@@ -1,3 +1,4 @@
+# Material exploratorio: parametros fixos. Figuras finais: gerar_figuras_caso1.py.
 import matplotlib.pyplot as plt
 import numpy as np
 import os
@@ -26,7 +27,7 @@ mesh_sizes = [128, 256, 512, 1024, 2048]   # malhas que você rodou
 # FUNÇÃO SOLUÇÃO EXATA
 # =========================================================
 def u_exata(x, t):
-    """Tensão exata para a equação do telegrafista homogênea"""
+    """Solução de d'Alembert somente para o Caso 1, com a=b=0."""
     return 0.5 * np.exp(-beta * (x - c*t)**2) + 0.5 * np.exp(-beta * (x + c*t)**2)
 
 # =========================================================

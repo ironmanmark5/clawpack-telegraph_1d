@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import os
 from pathlib import Path
 
@@ -30,7 +31,17 @@ def path_for(data_dir: Path, params: tuple[float, float, float, float]) -> Path:
 
 def frame_data(data_dir: Path, params: tuple[float, float, float, float], frame: int):
     time, x, q = read_frame(path_for(data_dir, params), frame)
+    if not math.isclose(time, frame*.8/64, rel_tol=0., abs_tol=1e-11):
+        raise ValueError(f'Tempo divergente em {run_id(params)}, quadro {frame}')
     return time, x, [row[0] for row in q]
+
+
+def check_same_grid(time, x, other_time, other_x) -> None:
+    if (len(x) != len(other_x)
+            or not math.isclose(time, other_time, rel_tol=0., abs_tol=1e-11)
+            or any(not math.isclose(a, b, rel_tol=0., abs_tol=1e-11)
+                   for a, b in zip(x, other_x))):
+        raise ValueError('Curvas em malhas/tempos diferentes nao podem ser subtraidas.')
 
 
 def run_label(params: tuple[float, float, float, float], *, detail: str = 'ab') -> str:
@@ -190,7 +201,8 @@ def differences_from_b0(data_dir: Path, destination: Path) -> None:
         for col, frame in enumerate((32, 64)):
             time, x, baseline = frame_data(data_dir, (a, 0, 200, 0), frame)
             for b, color in ((-1, '#0072B2'), (1, '#009E73')):
-                _, _, u = frame_data(data_dir, (a, b, 200, 0), frame)
+                other_time, other_x, u = frame_data(data_dir, (a, b, 200, 0), frame)
+                check_same_grid(time, x, other_time, other_x)
                 axes[row, col].plot(x, [value - base for value, base in zip(u, baseline)],
                                     label=rf'$b={b:g}$', color=color, lw=1.8)
             axes[row, col].axhline(0, color='0.35', lw=0.8)
@@ -238,18 +250,27 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--dados', type=Path, default=ROOT / 'resultados',
                         help='Pasta com as simulações completas.')
+    parser.add_argument('--destino', type=Path,
+                        help='Pasta dos graficos/CSVs; padrao: <dados>/figuras_comparativas.')
     args = parser.parse_args()
     data_dir = args.dados.expanduser().resolve()
-    estilo()
     groups = cases()
     required = dict.fromkeys([p for group in groups.values() for p in group])
     missing = [run_id(p) for p in required if not complete(path_for(data_dir, p), p)]
     if missing:
         parser.error('Simulações ausentes ou incompletas: ' + ', '.join(missing))
+    resolutions = {json.loads((path_for(data_dir, p) / 'parametros.json').read_text())['num_cells']
+                   for p in required}
+    if len(resolutions) != 1:
+        parser.error('As comparacoes exigem uma mesma resolucao em todas as configuracoes.')
 
-    destination = data_dir / 'figuras_comparativas'
+    destination = (args.destino.expanduser().resolve() if args.destino
+                   else data_dir / 'figuras_comparativas')
     destination.mkdir(parents=True, exist_ok=True)
     os.environ.setdefault('MPLCONFIGDIR', str(data_dir / '.mplconfig'))
+    import matplotlib
+    matplotlib.use('Agg')
+    estilo()
 
     for case in (2, 3):
         for frame in (32, 64):
