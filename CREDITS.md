@@ -18,7 +18,7 @@ sido possível sem essa base.
 
 - CLAWPACK DEVELOPMENT TEAM. **Clawpack**: Conservation Laws Package. 2026.
   DOI: 10.17605/osf.io/kmw6h. Disponível em: https://www.clawpack.org.
-- A implementação partiu do exemplo `classic/examples/acoustics_1d`,
+- A implementação partiu do exemplo `classic/examples/acoustics_1d_example1`,
   distribuído com o pacote, que foi adaptado para o sistema do telegrafista.
 - As rotinas numéricas do solver clássico unidimensional (`claw1.f`,
   `step1.f90`, `inlinelimiter.f90`, `bc1.f`, `out1.f` e demais arquivos de
@@ -26,7 +26,8 @@ sido possível sem essa base.
   modificadas** neste trabalho.
 - Versão utilizada: **5.14.0**, com os fontes do *Classic* no commit
   `6b3dfe6419d9b389e2d04a372a7880c9e9c8349d` do repositório oficial,
-  disponível em https://github.com/clawpack/clawpack.
+  disponível em https://github.com/clawpack/classic/commit/6b3dfe6419d9b389e2d04a372a7880c9e9c8349d
+  (o Classic é um submódulo do superprojeto Clawpack).
 - Licença: BSD de três cláusulas, reproduzida no arquivo `LICENSE` e também em
   `arquivos-roteiro-simulacoes/LICENSE-CLAWPACK.txt`.
 

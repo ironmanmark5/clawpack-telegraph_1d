@@ -13,7 +13,7 @@ identificador com os parâmetros usados, no formato
 | --- | --- | --- |
 | `a0`, `a0p5`, `a1`, `a2` | valor do coeficiente de amortecimento $a$; `p` indica a vírgula decimal | `a0p5` = $a = 0{,}5$ |
 | `b0`, `b0p5`, `b1`, `bm1` | valor do coeficiente de reação $b$; `m` indica sinal negativo | `bm1` = $b = -1$ |
-| `beta25`, `beta50`, `beta100`, `beta200` | largura da gaussiana inicial | `beta200` = $\beta = 200$ |
+| `beta25`, `beta50`, `beta100`, `beta200` | parâmetro da largura da gaussiana; maior $\beta$ significa pulso mais estreito | `beta200` = $\beta = 200$ |
 | `x00`, `x00p5` | centro inicial do pulso | `x00p5` = $x_0 = 0{,}5$ |
 
 Assim, `a1_bm1_beta200_x00` é o Caso 5: $a = 1$, $b = -1$, $\beta = 200$ e
@@ -29,6 +29,13 @@ $x_0 = 0$.
 | `amplitude.csv` | `frame, t, A_max_abs_u`: amplitude máxima $A(t) = \max_i |u_i(t)|$ em cada quadro |
 | `perfis.csv` | `frame, t, x, u, u_t, u_x`: as três componentes do estado em cada célula |
 | `execucao.log` | Saída do solver, útil para diagnóstico |
+
+Em execuções novas, `parametros.json` inclui também `provenance` (fontes,
+binário e comando de build) e `output_sha256` (checksums). Os manifestos antigos
+foram preservados: campos ausentes não são preenchidos retrospectivamente.
+O estado gravado aproxima médias celulares; as coordenadas `x` são os centros
+usados para representar e visualizar essas médias, não uma garantia de valores
+pontuais exatos. O intervalo entre quadros não é o passo interno adaptativo.
 
 ## 3. Arquivos agregados
 
@@ -50,16 +57,18 @@ $x_0 = 0$.
 | Script | Função |
 | --- | --- |
 | `convergencia_caso1.py` | Erros e ordens do Caso 1, com CSV e gráfico log–log; confere os valores contra os da monografia |
+| `rodar.sh` / `executar_caso1.py` | Executa o Caso 1 em diretório isolado, sem editar setrun.py ou sobrescrever saídas |
 | `arquivos-roteiro-simulacoes/executar_casos.py` | Executa os Casos 2 a 8 e registra parâmetros, amplitudes e perfis |
 | `arquivos-roteiro-simulacoes/gerar_figuras_comparativas.py` | Monta as figuras e tabelas comparativas dos Casos 2 a 8 |
 | `arquivos-roteiro-simulacoes/autoconvergencia.py` | Estudo de refinamento com o termo fonte ativo |
 
 Os scripts `comparar_malhas.py`, `plot_tensao.py`, `plot_evolucao_temporal.py`
 e `derivada_e_tensao.py`, na raiz, são material exploratório das primeiras
-etapas do trabalho. Eles geraram as figuras de verificação
+etapas do trabalho. Eles foram usados nas primeiras figuras de verificação
 (`resultados/telegrafista_t_0.20.png`, `0.40` e `0.60`, e as comparações de
-malhas), mas têm uma limitação conhecida: estimam $u_t$ por diferença entre
-snapshots consecutivos, o que introduz erro de primeira ordem no tempo. A
+malhas). Entre eles, `plot_evolucao_temporal.py` e `derivada_e_tensao.py`
+estimam $u_t$ por diferença progressiva entre snapshots consecutivos, o que
+introduz erro adicional de primeira ordem no tempo. A
 componente $u_t$ usada na monografia é a **segunda componente do estado**
 (`q2`), lida diretamente dos arquivos de saída, como fazem
 `convergencia_caso1.py` e o script de autoconvergência.
@@ -68,19 +77,18 @@ componente $u_t$ usada na monografia é a **segunda componente do estado**
 
 | Caso | Configurações | Seção | Figuras e tabelas |
 | --- | --- | --- | --- |
-| 1 — verificação, $a = b = 0$ | séries da raiz, $N = 128$ a $2048$ | 5.1 | Figuras 2 e 3, Tabela 4 |
-| 2 — amortecimento, $b = 0$ | `a0`, `a0p5`, `a1`, `a2` | 5.2 | Figura 4, Tabela 5 |
-| 3 — termo reativo, $a = 0$ | `b0`, `b0p5`, `b1` | 5.3 | Figura 5, Tabela 6 |
-| 4 — combinado, $a = b = 1$ | `a1_b1_beta200_x00` | 5.4 | Figura 6, Tabela 7 |
-| 5 — restaurador, $a = 1$, $b = -1$ | `a1_bm1_beta200_x00` | 5.5 | Figura 7, Tabela 7 |
-| 6 — pulso deslocado | `a0p5_bm1_beta25_x00p5` e a auxiliar `a1_bm1_beta200_x00p5` | 5.6 | Figuras 8, 9 e 10 |
-| 7 — largura da condição inicial | `a1_bm1_beta25/50/100/200_x00` | 5.7 | Figuras 11 e 12, Tabela 8 |
-| 8 — grade $a \times b$ | nove configurações com $a \in \{0;1;2\}$ e $b \in \{-1;0;1\}$ | 5.8 | Figuras 13 e 14, Tabelas 9 e 10 |
-| Autoconvergência | sete malhas, $a = b = 1$ | 5.9 | Figuras 15, 16 e 17, Tabela 11 |
+| 1 — verificação, $a = b = 0$ | séries da raiz, $N = 128$ a $2048$ | 6.1 | Figuras 6.1 e 6.2, Tabela 6.1 |
+| 2 — amortecimento, $b = 0$ | `a0`, `a0p5`, `a1`, `a2` | 6.2 | Figura 6.3, Tabela 6.2 |
+| 3 — termo reativo, $a = 0$ | `b0`, `b0p5`, `b1` | 6.3 | Figura 6.4, Tabela 6.3 |
+| 4 — combinado, $a = b = 1$ | `a1_b1_beta200_x00` | 6.4 | Figura 6.5, Tabela 6.4 |
+| 5 — restaurador, $a = 1$, $b = -1$ | `a1_bm1_beta200_x00` | 6.5 | Figura 6.6 |
+| 6 — pulso deslocado | `a0p5_bm1_beta25_x00p5` e a auxiliar `a1_bm1_beta200_x00p5` | 6.6 | Figuras 6.7, 6.8 e 6.9 |
+| 7 — largura da condição inicial | `a1_bm1_beta25/50/100/200_x00` | 6.7 | Figuras 6.10 e 6.11, Tabela 6.5 |
+| 8 — grade $a \times b$ | nove configurações com $a \in \{0;1;2\}$ e $b \in \{-1;0;1\}$ | 6.8 | Figuras 6.12 e 6.13, Tabelas 6.6 e 6.7 |
+| Autoconvergência | sete malhas, $a = b = 1$ | 6.9 | Figuras 6.14, 6.15 e 6.16, Tabela 6.8 |
 
-A numeração de figuras e tabelas acima é a da versão provisória do texto; na
-versão montada sobre o template oficial da UFLA, figuras e tabelas recebem
-numeração por seção, como "Figura 5.3".
+A numeração acompanha o template UFLA. O mapa dos arquivos de cada figura e
+tabela está em [`MAPA-DE-FIGURAS.md`](MAPA-DE-FIGURAS.md).
 
 ## 5. Configuração numérica
 
@@ -101,7 +109,8 @@ O repositório contém duas variantes da mesma rotina de Riemann:
 - `arquivos-roteiro-simulacoes/rp1_telegraph.f90`, usada na bateria e no estudo
   de refinamento, lê $c$, $a$ e $b$ no bloco comum `/cparam/`;
 - `solver-referencia/rp1_telegraph.f90`, usada nos resultados de verificação,
-  lê $\rho$ e $K$ e calcula $c = \sqrt{K/\rho}$.
+  recebe no bloco comum os parâmetros do `setprob.f90`, que lê $\rho$ e $K$
+  e calcula $c = \sqrt{K/\rho}$.
 
 A segunda precisa ser copiada para `$CLAW/riemann/src/`, que é o local previsto
 pelo `Makefile` da raiz para os solucionadores compartilhados.

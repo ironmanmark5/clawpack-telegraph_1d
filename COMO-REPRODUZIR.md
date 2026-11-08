@@ -1,174 +1,247 @@
 # Como reproduzir este trabalho
 
-Este guia acompanha a monografia. Ele descreve, na mesma ordem do texto, o que
-executar para refazer cada resultado, o que esperar de cada execução e o que
-não está no repositório de propósito. Para o mapa das alterações feitas no
-Clawpack, veja [`docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md`](docs/ALTERACOES-EM-RELACAO-AO-CLAWPACK.md);
-para o significado dos arquivos e dos nomes, veja
-[`docs/DADOS-E-NOMENCLATURA.md`](docs/DADOS-E-NOMENCLATURA.md).
+Este guia separa **instalar**, **simular** e **analisar dados existentes**.
+O cálculo é feito pelo **Classic 1D em Fortran**; Python configura entradas,
+automatiza execuções e analisa/visualiza saídas. Não é uma aplicação do solver
+PyClaw. Os três caminhos de resultados estão em
+[`docs/MAPA-DE-FIGURAS.md`](docs/MAPA-DE-FIGURAS.md).
 
-## 1. Preparar o ambiente
+> Os comandos de simulação abaixo são para reprodução. Não é necessário
+> executá-los para consultar os CSVs e as figuras publicados. Preserve uma
+> cópia dos resultados antes de qualquer reanálise que escreva arquivos.
 
-O trabalho foi executado com **Clawpack 5.14.0**, `gfortran` 16.2.1, Python
-3.14.7 e a opção de compilação `-O2`. O Clawpack não está incluído neste
-repositório: ele é uma dependência externa e precisa ser obtido separadamente.
+## 1. Preparar a dependência e o projeto
+
+Requisitos: Git, `make`, compilador Fortran 90 (o trabalho usa `gfortran`),
+Python 3.9 ou superior, NumPy e Matplotlib 3.6 ou superior. As versões
+**efetivamente usadas** foram Clawpack 5.14.0, gfortran 16.2.1 e Python 3.14.7;
+isso é um registro do ambiente, não a exigência de instalar exatamente esses
+compiladores. Outras combinações não foram todas testadas.
+
+Instale as ferramentas pelo gerenciador do sistema. Por exemplo, em
+Fedora/Nobara: `sudo dnf install git make gcc-gfortran python3-pip`.
+
+Obtenha o Clawpack **com seus submódulos**:
 
 ```bash
-# ferramentas
-sudo dnf install gcc-gfortran make        # Fedora/Nobara; use apt em Debian/Ubuntu
-python3 -m pip install -r requirements.txt
-
-# Clawpack 5.14.0
-git clone --branch v5.14.0 https://github.com/clawpack/clawpack.git
-export CLAW=$PWD/clawpack
-export PYTHONPATH=$CLAW:$PYTHONPATH
+git clone --recurse-submodules --branch v5.14.0 https://github.com/clawpack/clawpack.git
+export CLAW="$PWD/clawpack"
+export FC=gfortran
+export CLAW_PYTHON=python3
+export PYTHONPATH="$CLAW${PYTHONPATH:+:$PYTHONPATH}"
 ```
 
-Antes de qualquer execução, rode a verificação de ambiente deste repositório:
+Se o clone já existe sem os submódulos, execute
+`git -C "$CLAW" submodule update --init --recursive` após selecionar a versão
+desejada. Não atualize a instalação usada por resultados antigos sem registrar
+a mudança. Configure novamente as variáveis ao abrir outro terminal.
+
+Em uma instalação nova, clone esta aplicação na disposição adotada pelo trabalho:
 
 ```bash
+git clone https://github.com/ironmanmark5/clawpack-telegraph_1d.git "$CLAW/classic/examples/telegraph_1d"
+cd "$CLAW/classic/examples/telegraph_1d"
+python3 -m pip install -r requirements.txt
+```
+
+Se já está neste repositório, não precisa cloná-lo novamente. O Clawpack admite
+aplicações fora de sua árvore; nesse caso `CLAW` e `PYTHONPATH` precisam apontar
+explicitamente para a dependência correta. Não misture esta instalação com
+outra importada pelo Python. Para conferir:
+
+```bash
+python3 -B -c 'import clawpack; from clawpack.clawutil import data; print(clawpack.__version__); print(data.__file__)'
+```
+
+O `Makefile.common` usa `CLAW_PYTHON`, não `PYTHON`. Para escolher outro
+interpretador, configure `CLAW_PYTHON=/caminho/para/python3` e use esse mesmo
+interpretador nos comandos Python do guia.
+
+### Versão nominal e fontes efetivos
+
+A instalação original identifica-se como `5.14.0`, na árvore
+`v5.14.0-17-gc5b4fbe`, com Classic no commit
+`6b3dfe6419d9b389e2d04a372a7880c9e9c8349d`. Não é exatamente o checkout da tag
+do superprojeto. Na revisão de robustez, os 11 arquivos Classic compilados e
+`clawutil/data.py` foram comparados aos da tag `v5.14.0` e estavam iguais.
+Os metadados de autoconvergência registram hashes para identificar os arquivos
+efetivamente utilizados; eles não foram reescritos após a revisão.
+
+### Solver próprio e verificação do ambiente
+
+**Somente para o Caso 1**, o Makefile da raiz procura o solver fora do projeto:
+
+```bash
+cp solver-referencia/rp1_telegraph.f90 "$CLAW/riemann/src/"
 ./verificar-ambiente.sh
 ```
 
-O script confere se `gfortran`, `make`, Python e os pacotes de Python estão
-disponíveis, se a variável `CLAW` aponta para uma árvore válida do Clawpack e se
-o solucionador de Riemann está no lugar esperado pelo `Makefile`.
+Antes da cópia, compare/guarde o destino caso já exista um solver com esse
+nome. Essa localização é uma escolha do nosso Makefile, não uma obrigação do
+Clawpack. A bateria compila seu solver local e não requer essa cópia.
 
-## 2. Caso 1 — verificação da implementação ($a = b = 0$)
+O verificador examina as dependências do fluxo completo, incluindo VisClaw e
+o solver do Caso 1; retorna código diferente de zero quando encontra faltas.
+Ele não compila nem simula.
 
-Esta é a etapa de verificação, em que a equação se reduz à equação da onda e a
-solução de referência é a de d'Alembert. Corresponde à Seção 5.1 da monografia.
+## 2. Caso 1 — verificação com solução de d'Alembert
 
-```bash
-# o Makefile espera o solucionador em $CLAW/riemann/src/
-cp solver-referencia/rp1_telegraph.f90 $CLAW/riemann/src/
-
-make .exe
-make .output OUTDIR=output_malha_512    # uma malha; repita com outros valores de mx
-```
-
-O número de células é definido em `setrun.py` (`clawdata.num_cells[0]`). As
-séries usadas na monografia têm $N = 128$, $256$, $512$, $1024$ e $2048$.
-
-**O que esperar.** Cada execução grava pares `fort.qNNNN`/`fort.tNNNN` no
-diretório de saída: 65 arquivos de cada tipo, com o intervalo de saída de
-0,0125 e tempo final 0,8. Em `t = 0,4`, o perfil deve mostrar dois pulsos de
-amplitude próxima de 0,5, separando-se da origem com velocidade $\pm 2$. As
-figuras de comparação com a solução exata do repositório
-(`fig_caso1_t020.png` e `fig_caso1_t040.png`) foram geradas dessas saídas.
-
-**Erros e ordem.** A tabela de convergência da monografia usa a norma discreta
-$E_{L^2} = [\Delta x \sum_i (u_i - u_{ex}(x_i,t))^2]^{1/2}$ em $t = 0{,}4$ e a
-ordem $p = \log(E_h/E_{h/2})/\log 2$. O cálculo é automatizado pelo script
-deste repositório, que lê as séries, compara com a solução exata e escreve o
-CSV e o gráfico log–log:
+Na raiz deste projeto, para uma **saída ainda inexistente**:
 
 ```bash
-python3 convergencia_caso1.py                  # t = 0,4, séries output_malha_*
-python3 convergencia_caso1.py --tempo 0.8      # outro instante
-python3 convergencia_caso1.py --sem-figura     # apenas o CSV, no terminal
+./rodar.sh 512 --sem-plots
 ```
 
-Ele deriva $c$ e $\beta$ do `setprob.data` de cada série, de modo que não há
-parâmetros embutidos no código, e confere os valores calculados contra os
-documentados na Seção 5.1, apontando divergências. A saída fica em
-`resultados/convergencia_caso1/`. Para a série completa, os valores esperados
-em $t = 0{,}4$ são $E_{L^2}(u) = 4{,}54747\times10^{-2}$ para $N = 128$ e
-$2{,}55883\times10^{-3}$ para $N = 2048$, com ordens entre 0,90 e 1,30, além
-da comparação com as médias celulares exatas.
-
-O mesmo script calcula os erros das componentes $q_2 = u_t$ e $q_3 = u_x$
-contra as derivadas exatas. Como o termo fonte do caso $a = b = 0$ atua apenas
-sobre $q_1$, essas duas componentes são atualizadas exclusivamente pelo esquema
-hiperbólico; as ordens obtidas para elas ficam próximas de dois, o que isola a
-ordem da etapa de propagação da ordem global de $u$.
-
-## 3. Casos 2 a 8 — bateria de experimentos
-
-Cada caso altera um parâmetro do modelo ou a condição inicial. A definição dos
-casos está na Seção 4.3 da monografia e a correspondência entre caso,
-configuração e figura está em
-[`docs/DADOS-E-NOMENCLATURA.md`](docs/DADOS-E-NOMENCLATURA.md).
+O script usa `executar_caso1.py`: configura `num_cells=512` em memória, compila
+se necessário e gera as entradas em uma pasta temporária. Não edita
+`setrun.py`, não altera os `.data` da raiz e não sobrescreve saídas existentes.
+Valida os quadros e `fort.info` antes de publicar `output_malha_512/`.
+Uma falha conserva a pasta temporária com o log para diagnóstico.
 
 ```bash
-cd arquivos-roteiro-simulacoes
-python3 executar_casos.py --dry-run     # confere quais casos serão executados
-python3 executar_casos.py               # executa os Casos 2 a 8 (16 configurações)
-python3 gerar_figuras_comparativas.py   # monta as figuras comparativas
+./rodar.sh 512 --dry-run --destino reproducoes/nova
+./rodar.sh 512 --destino reproducoes/nova
 ```
 
-Opções úteis: `--casos 2` executa apenas um caso; `--celulas 1024` muda a
-malha; `--saida outra_pasta` separa uma bateria nova. A primeira execução
-compila o `xclaw`; as seguintes apenas rodam.
+Sem `--sem-plots`, a última etapa chama o VisClaw diretamente, sem disparar
+outra simulação. A segunda chamada acima **executa**; a primeira apenas confere
+os caminhos. O destino relativo é interpretado a partir do diretório de chamada.
 
-**O que esperar.** Para cada configuração o script cria um diretório em
-`resultados/` com os pares `fort.qNNNN`/`fort.tNNNN`, os arquivos
-`claw.data`/`setprob.data` efetivos, `parametros.json`, `amplitude.csv`,
-`perfis.csv` e `execucao.log`. O índice `resultados/casos.json` relaciona cada
-caso às configurações e `resultados/resumo.csv` registra a amplitude máxima em
-$t = 0{,}4$ e $t = 0{,}8$. A etapa final produz
-`resultados/figuras_comparativas/`, com as figuras e as tabelas usadas na
-Seção 5 da monografia.
+Para reproduzir as cinco séries na raiz, em um clone novo:
 
-**Conferência rápida.** Em `resultados/resumo.csv`, a configuração
-`a1_bm1_beta200_x00` (Caso 5) deve apresentar $A(0{,}4) = 0{,}41288$ e
-$A(0{,}8) = 0{,}33414$; a `a0_b0_beta200_x00` (referência, $a = b = 0$) deve
-apresentar $0{,}49835$ e $0{,}49490$. Se os seus valores coincidirem, a
-reprodução está correta.
+```bash
+for N in 128 256 512 1024 2048; do
+    ./rodar.sh "$N" --sem-plots
+done
+```
 
-## 4. Estudo de autoconvergência
+Cada saída contém 65 pares `fort.qNNNN`/`fort.tNNNN`, entradas efetivas e log.
+São 64 intervalos de saída até `t=0,8`, com estado inicial. **0,0125 é o
+intervalo entre saídas, não um passo interno fixo do solver.**
 
-Executa sete malhas com o termo fonte ativo ($c = 2$, $a = 1$, $b = 1$,
-$\beta = 200$, $x_0 = 0$) e compara as soluções por restrição conservativa.
-Corresponde à Seção 5.9 da monografia.
+O fluxo manual `make .exe`, `make .data`, `make .output OUTDIR=...` continua
+disponível. Nesse fluxo, a malha é a configurada em `setrun.py` (2048 por
+padrão): o nome `output_malha_512` não a modifica. Os alvos com ponto verificam
+dependências por datas; mudar apenas `OUTDIR` pode não forçar nova execução.
+
+### Análise do Caso 1, sem simular
+
+```bash
+python3 -B convergencia_caso1.py --saida resultados/reanalise_caso1
+python3 -B gerar_figuras_caso1.py --destino resultados/figuras_reanalise_caso1
+```
+
+São lidas as séries `output_malha_*` da raiz. Se as séries foram gravadas em
+outro local, use `--dirs` no script de convergência. Os scripts escrevem CSVs
+ou figuras, mas não executam Fortran; os destinos alternativos acima preservam
+os produtos publicados. Os destinos padrão originais continuam disponíveis.
+
+O erro usa `sqrt(dx*sum((u_i-u_ex(x_i,t))**2))`, além da comparação com a média
+celular exata. A ordem usa a razão efetiva dos espaçamentos, inclusive se uma
+malha intermediária não for selecionada. Os tempos, domínios e parâmetros
+das séries precisam ser compatíveis. A conferência com a Tabela 6.1 aplica-se
+somente ao caso documentado em `t=0,4`; ordens de referência são conferidas
+apenas nos pares de malhas correspondentes.
+
+Para outro instante disponível:
+
+```bash
+python3 -B convergencia_caso1.py --tempo 0.8 --saida resultados/reanalise_caso1_t08
+```
+
+Um tempo ausente não é silenciosamente trocado pelo quadro mais próximo.
+
+## 3. Casos 2 a 8 — 16 configurações únicas
+
+A partir da raiz:
 
 ```bash
 cd arquivos-roteiro-simulacoes
-python3 -m unittest -v test_autoconvergencia.py   # testes da rotina de erro
-python3 autoconvergencia.py                       # executa as sete malhas
-python3 autoconvergencia.py --somente-analisar    # recalcula tabelas e figuras
+python3 -B executar_casos.py --dry-run
+python3 -B executar_casos.py --saida resultados/reproducao_nova
+python3 -B gerar_figuras_comparativas.py --dados resultados/reproducao_nova
 ```
 
-**O que esperar.** Sete simulações de $N = 32$ a $2048$ em
-`resultados_autoconvergencia/simulacoes/`, o arquivo `autoconvergencia.csv` com
-os erros de refinamento e as ordens observadas, as figuras `erros_loglog`,
-`perfis_u` e `perfis_ut`, o relatório `RELATORIO.md` e os arquivos de
-proveniência. A trinca mais fina disponível deve fornecer $p_u \approx 0{,}85$
-e $p_{u_t} \approx 2{,}16$; as malhas grossas apresentam ordens
-pré-assintóticas, como discutido no relatório.
+O executor usa **400 células por padrão**; `--celulas 1024` muda explicitamente
+a resolução, e `--casos 2` seleciona um caso. O `setrun.py` da bateria, quando
+chamado diretamente, mantém o padrão 1024. Não confunda esses dois padrões.
 
-## 5. O que não está no repositório
+Novas execuções registram fontes, comando de compilação, hash do binário e
+checksums das saídas. Uma saída só é reutilizada para simulação se essa
+proveniência coincidir. Dados históricos sem esses campos não são apagados
+nem recebem hashes retrospectivos: podem ser analisados, mas uma nova
+simulação deve usar outra `--saida`. Comentários nos fontes também alteram
+seus hashes e, conservadoramente, impedem essa reutilização automática.
 
-Por tamanho, e porque podem ser regenerados pelos scripts acima, ficaram fora
-do controle de versão:
+A análise valida entradas efetivas, geometria, tempos, finitude, `fort.info`
+e amplitudes CSV. Não mistura resoluções nas comparações. Para analisar a
+bateria original sem substituir as figuras publicadas:
 
-- as saídas brutas das simulações (`fort.qNNNN`, `fort.tNNNN`, `xclaw`) das
-  duas baterias, que somam dezenas de megabytes;
-- os arquivos `perfis.csv` de cada configuração, que contêm as médias
-  celulares quadro a quadro e são a matéria-prima das figuras;
-- os resultados da bateria repetida com 1024 células.
+```bash
+python3 -B gerar_figuras_comparativas.py --dados resultados --destino resultados/figuras_reanalise
+```
 
-O que está versionado é o conjunto que permite conferir os números da
-monografia sem executar nada: as figuras comparativas, os CSVs agregados
-(`resumo.csv`, `amplitudes_tempos_comuns.csv`, as matrizes do Caso 8 e o
-`autoconvergencia.csv`), o resultado de `resultados/convergencia_caso1/` e os
-metadados de proveniência (`experimento.json`, `testes_sinteticos.json`,
-`ordens_diagnostico.json`).
+As 16 configurações históricas principais têm 400 células. Como conferência
+parcial, no Caso 5: `A(0,4) ≈ 0,41288`, `A(0,8) ≈ 0,33414`; na referência
+`a=b=0`: `0,49835` e `0,49490`. Coincidir nesses quatro valores é um indício,
+não uma prova completa de reprodução. O Caso 6 pode sofrer influência da
+fronteira perto de `t=0,75`; o domínio original foi mantido.
 
-## 6. Se algo der errado
+## 4. Autoconvergência com fonte ativa
 
-| Sintoma | Causa provável e solução |
-| --- | --- |
-| `fatal error: opendatafile` ou erro de link no `make` | O solucionador não está em `$CLAW/riemann/src/`. Rode a cópia indicada na Seção 2 |
-| `ModuleNotFoundError: clawpack` | `PYTHONPATH` não inclui a raiz do Clawpack. Exporte novamente e confirme com `python3 -c "import clawpack; print(clawpack.__version__)"` |
-| `gfortran: command not found` | Instale o compilador (Seção 1) |
-| `ModuleNotFoundError: matplotlib` | `python3 -m pip install -r requirements.txt` |
-| O script reclama de saída incompleta | Ele se recusa a reaproveitar execuções duvidosas, de propósito. Use `--saida` para um diretório novo |
-| Resultados diferentes dos da monografia | Confira `setprob.data` e `claw.data` gerados em cada caso: eles registram os parâmetros efetivamente usados |
+A partir de `arquivos-roteiro-simulacoes/`:
 
-## 7. Se você quer apenas conferir os números
+```bash
+python3 -B -m unittest -v test_autoconvergencia.py
+python3 -B autoconvergencia.py --claw "$CLAW" --saida resultados_autoconvergencia_nova
+```
 
-Não é preciso compilar nada. O caminho mais curto é ler os CSVs agregados
-indicados na Seção 5 e compará-los com as tabelas da monografia, usando a
-correspondência entre caso e configuração descrita em
-[`docs/DADOS-E-NOMENCLATURA.md`](docs/DADOS-E-NOMENCLATURA.md).
+São sete malhas de 32 a 2048 células; `c=2, a=1, b=1, beta=200, x0=0`.
+Não é necessário um nome específico de branch. A branch efetiva continua
+registrada como procedência. Builds e saídas antigos permanecem preservados.
+
+Para dados brutos já existentes na pasta padrão:
+
+```bash
+python3 -B autoconvergencia.py --somente-analisar
+```
+
+Esse comando não compila nem simula, **mas reescreve os relatórios, CSVs e
+figuras derivados**. Não o execute sobre o arquivo histórico se quiser apenas
+consultar os resultados publicados. Em um clone novo, as saídas brutas devem
+ser produzidas antes: não estão no Git. Mais detalhes em
+[`AUTOCONVERGENCIA.md`](arquivos-roteiro-simulacoes/AUTOCONVERGENCIA.md).
+
+## 5. O que está e o que não está no Git
+
+Estão versionados: fontes, scripts, documentação, figuras finais, CSVs
+agregados e metadados de procedência. Não estão: binários, objetos, saídas
+brutas completas, caches e a bateria auxiliar de 1024 células. Os nomes e
+colunas estão em [`docs/DADOS-E-NOMENCLATURA.md`](docs/DADOS-E-NOMENCLATURA.md).
+
+Para apenas conferir números, leia os CSVs e o mapa de figuras: não é preciso
+instalar ou executar o Clawpack. Os testes de robustez, também sem simular:
+
+```bash
+# Na raiz do projeto:
+python3 -B -m unittest discover -s tests -v
+```
+
+## 6. Segurança e diagnóstico
+
+- `make plots` apenas plota; `make .plots` pode recompilar e simular.
+- `make output` não verifica dependências: exige binário e `.data` atualizados.
+- O fluxo manual tem `OVERWRITE=True` por padrão. Não aponte para dados que
+  deseja preservar. `rodar.sh` recusa destinos existentes.
+- Mudar `FFLAGS` não força recompilação no fluxo Makefile. Não troque flags
+  para revisar resultados históricos. Novas baterias recompilam explicitamente.
+- A CFL controla a propagação hiperbólica; não garante estabilidade de uma
+  fonte explícita com coeficientes arbitrariamente rígidos.
+- Em falhas, confira o caminho do solver, os submódulos, a instalação importada,
+  o log e `fort.info`. Um erro em `opendatafile` aponta primeiro para arquivos
+  de entrada ausentes/inválidos, não necessariamente para falta do solver.
+
+Referências oficiais consultadas: [instalação Fortran](https://www.clawpack.org/installing_fortcodes.html),
+[ambiente](https://www.clawpack.org/setenv.html), [Makefiles](https://www.clawpack.org/makefiles.html),
+[rotinas de usuário](https://www.clawpack.org/user_routines.html),
+[contornos](https://www.clawpack.org/bc.html) e [formato de saída](https://www.clawpack.org/output_styles.html).

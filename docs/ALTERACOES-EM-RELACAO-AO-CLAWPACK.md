@@ -48,15 +48,20 @@ conforme a tabela a seguir.
 | `arquivos-roteiro-simulacoes/autoconvergencia.py` | novo | executa as sete malhas, restringe a solução fina à grossa e calcula erros e ordens | estudar a convergência com o termo fonte ativo |
 | `arquivos-roteiro-simulacoes/test_autoconvergencia.py` | novo | testes sintéticos da rotina de erro e ordem | verificar a automação independentemente do solver |
 
-## Resumo das diferenças linha a linha
+## Resumo histórico das diferenças linha a linha
+
+As contagens e o diff arquivado abaixo descrevem a adaptação anterior à
+revisão de robustez. Foram preservados como referência, não regenerados para
+reescrever a história. Os ajustes posteriores, sem mudança das instruções
+Fortran, estão em [`REVISAO-DE-ROBUSTEZ.md`](REVISAO-DE-ROBUSTEZ.md).
 
 | Arquivo | Linhas alteradas | O que muda, em resumo |
 | --- | --- | --- |
 | `setrun.py` | +8 / −8 | domínio de $[-1,1]$ para $[-2,2]$; 2048 células; três equações e três ondas; limitador MC nas três famílias; 64 instantes de saída; `source_split = 1` |
 | `setprob.f90` | 0 / 0 | nenhuma alteração; o caso da raiz mantém a leitura de $\rho$, $K$ e $\beta$ |
 | `qinit.f90` | +11 / −2 | preenche as três componentes com a gaussiana e sua derivada |
-| `setplot.py` | +30 / −6 | rótulos e leitura das três componentes nas figuras |
-| `Makefile` | +6 / −2 | aponta para `rp1_telegraph.f90` em vez de `rp1_acoustics.f90`; troca o caminho fixo do Python por `PYTHON ?= python3` |
+| `setplot.py` | +30 / −6 | rótulos e visualização direta de $u$ e $u_t$ |
+| `Makefile` | +6 / −2 | aponta para `rp1_telegraph.f90` em vez de `rp1_acoustics.f90`; a revisão posterior corrige o interpretador para `CLAW_PYTHON ?= python3` |
 | `src1.f90` | +12 / −11 | substitui a rotina vazia do pacote pela atualização de $u$ |
 | `solver-referencia/rp1_telegraph.f90` | +57 / −34 | solucionador de três ondas, com autovalores $-c$, $0$ e $c$, e cabeçalho comentado atualizado |
 
@@ -99,7 +104,7 @@ fontes do Clawpack. Com a árvore em `$CLAW`:
 
 ```bash
 export CLAW=/caminho/para/clawpack
-export PYTHONPATH=$CLAW:$PYTHONPATH
+export PYTHONPATH="$CLAW${PYTHONPATH:+:$PYTHONPATH}"
 ```
 
 Para a bateria de casos (Casos 2 a 8):
@@ -107,29 +112,30 @@ Para a bateria de casos (Casos 2 a 8):
 ```bash
 cd arquivos-roteiro-simulacoes
 python3 executar_casos.py --dry-run     # confere a lista antes de executar
-python3 executar_casos.py               # executa e registra os resultados
-python3 gerar_figuras_comparativas.py   # gera as figuras comparativas
+python3 executar_casos.py --saida resultados/reproducao_nova
+python3 gerar_figuras_comparativas.py --dados resultados/reproducao_nova
 ```
 
 Para o estudo de refinamento, que executa as sete malhas:
 
 ```bash
 python3 -m unittest -v test_autoconvergencia.py
-python3 autoconvergencia.py
-python3 autoconvergencia.py --somente-analisar   # recalcula tabelas e figuras
+python3 autoconvergencia.py --saida resultados_autoconvergencia_nova
+python3 autoconvergencia.py --somente-analisar --saida resultados_autoconvergencia_nova
 ```
 
 Para a verificação da implementação (Caso 1, $a = b = 0$), na raiz do
 repositório, copie antes o solucionador para o local previsto pelo `Makefile`:
 
 ```bash
-cp solver-referencia/rp1_telegraph.f90 $CLAW/riemann/src/
-make .exe
-make .output OUTDIR=output_malha_512
+cp solver-referencia/rp1_telegraph.f90 "$CLAW/riemann/src/"
+./rodar.sh 512 --sem-plots
 ```
 
 As séries do Caso 1 nascem da repetição dessa última etapa com diferentes
-números de células, conforme o roteiro descrito na Seção 4 da monografia.
+números de células. O executor configura a malha em memória sem editar o
+fonte; o nome do diretório, sozinho, não determina a resolução. Saídas
+existentes são recusadas; use `--destino` para preservar a bateria original.
 
 ## Observações sobre reprodutibilidade
 

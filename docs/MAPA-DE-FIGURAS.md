@@ -15,7 +15,7 @@ nome usado no texto e a terceira, o arquivo gerado por este repositório.
 | --- | --- | --- | --- |
 | Caso 1 (verificação, $a=b=0$) | `gerar_figuras_caso1.py` | `output_malha_{128,256,512,1024,2048}/` e a solução de d'Alembert | `resultados/figuras/` |
 | Casos 2 a 8 | `arquivos-roteiro-simulacoes/gerar_figuras_comparativas.py` | `arquivos-roteiro-simulacoes/resultados/<caso>/` | `arquivos-roteiro-simulacoes/resultados/figuras_comparativas/` |
-| Autoconvergência | `arquivos-roteiro-simulacoes/autoconvergencia.py` | as sete malhas `resultados_autoconvergencia/malha_*` | `arquivos-roteiro-simulacoes/resultados_autoconvergencia/` |
+| Autoconvergência | `arquivos-roteiro-simulacoes/autoconvergencia.py` | as sete malhas em `resultados_autoconvergencia/simulacoes/N*_a1_b1_beta200_x0/` | `arquivos-roteiro-simulacoes/resultados_autoconvergencia/` |
 
 ## Figuras
 
@@ -53,6 +53,12 @@ nome usado no texto e a terceira, o arquivo gerado por este repositório.
 
 ## Comandos
 
+Os comandos de figuras leem dados existentes, mas escrevem os produtos nos
+destinos padrão. Para preservar os produtos publicados, use `--destino` nos
+geradores de figuras ou uma pasta nova no estudo. Veja o guia
+[`COMO-REPRODUZIR.md`](../COMO-REPRODUZIR.md). A execução da autoconvergência
+abaixo é uma nova bateria; não é necessária para consultar os arquivos finais.
+
 ```bash
 # Figuras do Caso 1 (precisa das séries output_malha_* na raiz)
 python3 gerar_figuras_caso1.py
@@ -62,10 +68,10 @@ cd arquivos-roteiro-simulacoes
 python3 gerar_figuras_comparativas.py
 
 # Autoconvergência: executa as sete malhas e gera figuras, CSV e tabela LaTeX
-python3 autoconvergencia.py --claw "$CLAW"
+python3 autoconvergencia.py --claw "$CLAW" --saida resultados_autoconvergencia_nova
 
 # Se as malhas já existem, apenas analisar e gerar as figuras
-python3 autoconvergencia.py --somente-analisar
+python3 autoconvergencia.py --somente-analisar --saida resultados_autoconvergencia_nova
 ```
 
 ## Observações

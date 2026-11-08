@@ -13,10 +13,10 @@ Entre nesta pasta e rode:
 ```bash
 cd arquivos-roteiro-simulacoes
 python3 executar_casos.py --dry-run
-python3 executar_casos.py
+python3 executar_casos.py --saida resultados/reproducao_nova
 ```
 
-Requisitos: `gfortran`, `make`, Python 3, `matplotlib` e a árvore do Clawpack na posição atual do projeto. O script usa a versão local do pacote Python do Clawpack. Também é possível compilar separadamente com `make .exe`. Um teste isolado pode ser feito com `python3 executar_casos.py --casos 2`.
+Requisitos: `gfortran`, `make`, Python 3.9+, `matplotlib` 3.6+ e a árvore completa do Clawpack. Configure `CLAW` e `PYTHONPATH` como no [guia](../COMO-REPRODUZIR.md). A localização dentro da árvore permite descoberta automática. Também é possível compilar separadamente com `make .exe`. Um teste isolado pode ser feito com `python3 executar_casos.py --casos 2 --saida resultados/teste_novo`.
 
 Para repetir todos os casos com 1024 células e preservar a bateria original de 400 células:
 
@@ -29,11 +29,11 @@ O executor registra a resolução em `parametros.json` e `resumo.csv` e a confer
 
 O comando direto `python3 setrun.py` usa 1024 células. O executor dos Casos 2–8 mantém 400 como padrão e passa explicitamente o valor escolhido por `--celulas`.
 
-A primeira execução compila o executável `xclaw` a partir dos fontes Classic Clawpack e das rotinas desta pasta. Cada conjunto único de parâmetros é executado uma única vez. Execuções completas são reutilizadas em chamadas posteriores; saídas incompletas causam erro para evitar reaproveitar dados duvidosos. Não é necessário editar `setrun.py` entre casos.
+Cada chamada de simulação recompila o executável `xclaw` a partir dos fontes Classic Clawpack e das rotinas desta pasta. Cada conjunto único de parâmetros é executado uma única vez por bateria. Novas saídas registram hashes dos fontes, do binário e dos dados. Uma execução só é reutilizada quando essas identificações e as validações dos quadros coincidem. Saídas históricas sem proveniência suficiente continuam disponíveis para análise, mas o executor exige outra `--saida` em vez de presumir que vieram do código atual. Não se apagam dados nem se completam manifestos antigos retrospectivamente. Não é necessário editar `setrun.py` entre casos.
 
 Os resultados ficam em `resultados/`, com um diretório por configuração. Cada diretório contém os arquivos `fort.qNNNN` e `fort.tNNNN`, os `claw.data` e `setprob.data` efetivos, `parametros.json`, `amplitude.csv`, `perfis.csv` e `execucao.log`. O índice `casos.json` relaciona cada caso concluído às configurações. `resumo.csv` registra parâmetros e amplitude nos tempos 0,4 e 0,8. As figuras comparativas estão em `resultados/figuras/caso_N.png`, com perfil de u em t=0,4 e amplitude máxima ao longo do tempo. Arquivos `caso_N_t*.png` mostram os perfis em t=0,2, 0,4, 0,6 e 0,8. Os perfis CSV incluem também o frame inicial.
 
-Para gerar uma pasta separada com as comparações do roteiro, rode `python3 gerar_figuras_comparativas.py`. Isso usa as simulações já concluídas e cria `resultados/figuras_comparativas/`, com figuras PNG e PDF, tabelas de amplitude nos tempos comuns e matrizes do Caso 8. A pasta inclui as comparações entre configurações dos Casos 4 e 5 e as condições iniciais dos Casos 6 e 7.
+Para gerar as comparações do roteiro a partir de dados existentes, rode `python3 gerar_figuras_comparativas.py --dados resultados/reproducao_nova`. O destino padrão é `<dados>/figuras_comparativas/`; use `--destino outra_pasta` para não substituir figuras e CSVs existentes. São conferidos tempos, geometria, resolução comum e amplitudes antes das comparações. A análise não executa o solver.
 
 ## Parâmetros
 
@@ -51,7 +51,7 @@ Todos os casos usam c=2, domínio [-2,2], N=400 por padrão (ou o valor de `--ce
 
 São 16 configurações únicas, incluindo uma execução auxiliar para comparar Caso 5 e Caso 6 alterando somente o centro: `a=1`, `b=-1`, `beta=200`, `x0=0` e `x0=0,5`. O Caso 6 do roteiro continua com `a=0,5`, `b=-1`, `beta=25`, `x0=0,5`. Ele usa `z=x-x0` na condição inicial gaussiana e em sua derivada espacial. Seu pulso deslocado se aproxima da fronteira direita por volta de t=0,75; o domínio original foi mantido, portanto os resultados posteriores a esse instante podem incluir influência do contorno. Avalie essa influência antes de interpretá-los como propagação em domínio aberto.
 
-O script mede `A(t)=max_i |u_i(t)|`, isto é, máximo discreto nos centros das células. Não calcula a solução analítica para a e b não nulos. Os gráficos dos casos 4 a 6 mostram uma única curva em cada painel; nos outros casos fazem as comparações pedidas.
+O script mede `A(t)=max_i |u_i(t)|`, máximo discreto das aproximações de médias celulares representadas nos centros. Não calcula a solução analítica para a e b não nulos. As figuras diretas e as figuras comparativas têm finalidades distintas; as comparativas também isolam configurações dos Casos 4 a 6.
 
 ## Autoconvergência e resumo expandido
 
@@ -62,4 +62,4 @@ O experimento combinado de erros e ordem de convergência possui automação pr�
 - [Tabela de erros e ordens em CSV](resultados_autoconvergencia/autoconvergencia.csv).
 - [Resumo expandido em PDF e LaTeX para a orientação](resumo_autoconvergencia/README.md).
 
-As saídas brutas e os executáveis permanecem locais; o repositório inclui os resultados agregados, figuras e metadados. Em um clone novo, execute `python3 autoconvergencia.py` para gerar as sete simulações antes de usar `--somente-analisar`.
+As saídas brutas e os executáveis permanecem locais; o repositório inclui os resultados agregados, figuras e metadados. Em um clone novo, execute a autoconvergência para gerar as sete simulações antes de usar `--somente-analisar`. Qualquer branch pode ser usada; seu nome é apenas registrado como procedência. Comentários revisados mudam os hashes dos fontes: use uma pasta nova para uma nova bateria e preserve o arquivo histórico.

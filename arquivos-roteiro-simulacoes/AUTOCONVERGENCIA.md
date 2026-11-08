@@ -10,24 +10,30 @@ A partir desta pasta:
 
 ```bash
 python3 -m unittest -v test_autoconvergencia.py
-python3 autoconvergencia.py
+python3 autoconvergencia.py --saida resultados_autoconvergencia_nova
 ```
 
 O Clawpack é localizado por `--claw`, pela variável `CLAW`, pelo pacote Python instalado ou por uma instalação válida em diretórios ancestrais. Para indicar uma instalação explicitamente:
 
 ```bash
-python3 autoconvergencia.py --claw /caminho/para/clawpack
+python3 autoconvergencia.py --claw /caminho/para/clawpack --saida resultados_autoconvergencia_nova
 ```
 
-Os requisitos são Python 3, matplotlib, make, gfortran e a árvore de fontes do Clawpack Classic. O script usa somente o ambiente existente. `--fc` seleciona o compilador; `--fflags=-O2` registra as flags usadas. Não cria ambientes virtuais nem instala dependências.
+Os requisitos são Python 3.9+, matplotlib 3.6+, make, gfortran e a árvore de fontes do Clawpack Classic. O script usa somente o ambiente existente. `--fc` seleciona o compilador; `--fflags=-O2` registra as flags usadas. Não cria ambientes virtuais nem instala dependências. Não exige nome específico de branch; o nome efetivo é registrado como procedência do build.
 
 As saídas ficam em `resultados_autoconvergencia/`, com diretórios `simulacoes/N0032_a1_b1_beta200_x0`, etc. `--saida outra_pasta` é relativo à localização desta aplicação. Identificadores incluem N. O script recompila à força em `build/`, usando cópias dos fontes locais e de todos os fontes Classic enumerados pelo Makefile. Não sobrescreve o executável nem as saídas dos Casos 2–8.
 
 Uma execução só é reutilizada após conferir parâmetros, hashes dos fontes/executável/saídas, dimensões, inicialização, todos os tempos e finitude. Saídas incompletas ou incompatíveis causam erro e são preservadas; use outra `--saida` para uma nova implementação. Para recalcular apenas as tabelas e figuras dos dados já existentes:
 
 ```bash
-python3 autoconvergencia.py --somente-analisar
+python3 autoconvergencia.py --somente-analisar --saida resultados_autoconvergencia_nova
 ```
+
+`--somente-analisar` não compila nem simula, mas reescreve os produtos
+derivados na pasta selecionada. Para apenas consultar os resultados, leia os
+arquivos publicados. Alterações de comentários também mudam hashes: não
+reescreva `execucao.json`, `experimento.json` ou snapshots históricos para
+fazê-los corresponder aos fontes atuais. Uma nova bateria deve usar outra pasta.
 
 `--testes` executa apenas os três testes sintéticos exigidos, sem compilar ou simular. Falhas de build ou execução ficam em `bloqueio.json`, `RELATORIO_BLOQUEIO.md` e nos logs; dados ausentes não são preenchidos.
 

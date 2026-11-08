@@ -38,6 +38,9 @@ resultados, o caminho é este:
 5. **Para saber qual script gera cada figura**:
    [`docs/MAPA-DE-FIGURAS.md`](docs/MAPA-DE-FIGURAS.md) lista, figura por
    figura, o script responsável, o comando e o arquivo de dados de entrada.
+6. **Para entender a revisão de robustez sem mudar o método**:
+   [`docs/REVISAO-DE-ROBUSTEZ.md`](docs/REVISAO-DE-ROBUSTEZ.md) registra as
+   decisões, os testes e o que foi deliberadamente preservado.
 
 ## A equação e o sistema resolvido
 
@@ -65,38 +68,42 @@ separação fracionária, após a etapa hiperbólica.
 ## Escopo
 
 Este repositório cobre o que está na monografia: a verificação no caso
-$a=b=0$, os oito casos da bateria paramétrica e o estudo de autoconvergência
+$a=b=0$, os Casos 2 a 8 da bateria paramétrica e o estudo de autoconvergência
 com o termo fonte ativo. Experimentos exploratórios que não entraram no texto
-não fazem parte do material distribuído aqui.
+não fazem parte do caminho de reprodução dos resultados finais. Alguns
+scripts antigos permanecem identificados como material exploratório.
 
 ## Onde cada arquivo deve ficar
 
-Este repositório **é** uma pasta de exemplo do Clawpack. Para compilar, o
-conteúdo dele deve estar em `$CLAW/classic/examples/telegraph_1d/`, onde
-`$CLAW` é a raiz da árvore do Clawpack instalada na sua máquina. A partir daí,
-o Clawpack espera uma organização própria: parte dos arquivos fica **dentro
-dessa pasta** e um deles precisa ficar **fora dela**, na pasta de
-solucionadores de Riemann. É o erro mais comum na primeira tentativa de
-compilar.
+Este repositório é uma **aplicação do Classic 1D**, com cálculo em Fortran e
+configuração/análise em Python; não usa o solver PyClaw para avançar a solução.
+A disposição adotada no trabalho é `$CLAW/classic/examples/telegraph_1d/`,
+onde `$CLAW` aponta para a raiz da instalação. Ela facilita a localização
+automática das dependências, mas não é uma exigência universal do Clawpack:
+fora dessa árvore, configure `CLAW` e `PYTHONPATH` explicitamente.
+
+O `Makefile` da raiz escolheu procurar o solver em `$CLAW/riemann/src/`.
+Essa é uma escolha desta aplicação, não uma obrigação para todo solver próprio.
 
 | Arquivo | Onde deve ficar | Papel |
 | --- | --- | --- |
 | `setrun.py` | `$CLAW/classic/examples/telegraph_1d/` | configura malha, tempo final, CFL, instantes de saída e o termo fonte |
 | `setprob.f90` | idem | lê os parâmetros do modelo em `setprob.data` |
 | `qinit.f90` | idem | define a condição inicial gaussiana e sua derivada espacial |
-| `src1.f90` | idem | trata o termo fonte, com amortecimento e reação |
-| `setplot.py` | idem | gera os gráficos a partir das saídas |
+| `src1.f90` | idem | no Caso 1, atualiza somente $u$ por meio de $u_t$ |
+| `setplot.py` | idem | configura a visualização direta no VisClaw; as figuras finais têm scripts próprios |
 | `Makefile` | idem | compila e executa, e aponta para o solucionador |
 | **`rp1_telegraph.f90`** | **`$CLAW/riemann/src/`** | solucionador de Riemann da parte hiperbólica; é o único arquivo que vive **fora** da pasta do exemplo |
 
 ```bash
-mkdir -p $CLAW/riemann/src
-cp solver-referencia/rp1_telegraph.f90 $CLAW/riemann/src/
+cp solver-referencia/rp1_telegraph.f90 "$CLAW/riemann/src/"
 ```
 
-Dois detalhes que costumam confundir. Os arquivos `claw.data` e `setprob.data`
-são **gerados** pelo `setrun.py` a cada execução e não devem ser editados à
-mão: para mudar um parâmetro, altere o `setrun.py` e rode `make .data`. E a
+Confira o destino antes da cópia se já existir um solver próprio com esse nome.
+Os arquivos `claw.data` e `setprob.data` são **gerados** pelo `setrun.py` e não
+devem ser editados à mão. No fluxo Makefile, `make .data` verifica dependências;
+`make data` força a geração. O `rodar.sh` gera dados isolados por execução,
+sem editar `setrun.py` nem os arquivos `.data` da raiz. Já a
 bateria dos Casos 2 a 8 não precisa dessa cópia, porque tem o próprio
 `rp1_telegraph.f90` dentro de `arquivos-roteiro-simulacoes/`, com o `Makefile`
 apontando para ele.
@@ -111,41 +118,52 @@ quê, está em
 
 ## Como reproduzir
 
-Pré-requisitos: `make`, `gfortran`, Python 3 com `numpy` e `matplotlib`
+Pré-requisitos: `make`, `gfortran`, Python 3.9+ com `numpy` e `matplotlib` 3.6+
 (veja `requirements.txt`) e a árvore de fontes do Clawpack. O projeto foi
 executado com Clawpack 5.14.0, `gfortran` 16.2.1 e Python 3.14.7. O Clawpack é
 uma dependência externa e não está incluído neste repositório:
 
 ```bash
-git clone --branch v5.14.0 https://github.com/clawpack/clawpack.git
-export CLAW=$PWD/clawpack
-export PYTHONPATH=$CLAW:$PYTHONPATH
+git clone --recurse-submodules --branch v5.14.0 https://github.com/clawpack/clawpack.git
+export CLAW="$PWD/clawpack"
+export FC=gfortran
+export CLAW_PYTHON=python3
+export PYTHONPATH="$CLAW${PYTHONPATH:+:$PYTHONPATH}"
 ```
+
+Esse bloco instala a dependência; volte à raiz deste projeto antes dos
+comandos seguintes. O guia explica também onde clonar esta aplicação e como
+conferir se o Python importa a mesma instalação indicada por `CLAW`.
 
 Bateria de casos (Casos 2 a 8), que gera as figuras comparativas:
 
 ```bash
 cd arquivos-roteiro-simulacoes
 python3 executar_casos.py --dry-run     # lista o que será executado
-python3 executar_casos.py
-python3 gerar_figuras_comparativas.py
+python3 executar_casos.py --saida resultados/reproducao_nova
+python3 gerar_figuras_comparativas.py --dados resultados/reproducao_nova
 ```
 
 Estudo de refinamento, com sete malhas de 32 a 2048 células:
 
 ```bash
 python3 -m unittest -v test_autoconvergencia.py
-python3 autoconvergencia.py
-python3 autoconvergencia.py --somente-analisar
+python3 autoconvergencia.py --saida resultados_autoconvergencia_nova
+python3 autoconvergencia.py --somente-analisar --saida resultados_autoconvergencia_nova
 ```
 
 Verificação da implementação (Caso 1, $a = b = 0$), na raiz do repositório:
 
 ```bash
-cp solver-referencia/rp1_telegraph.f90 $CLAW/riemann/src/
-make .exe
-make .output OUTDIR=output_malha_512
+cp solver-referencia/rp1_telegraph.f90 "$CLAW/riemann/src/"
+./rodar.sh 512 --sem-plots
 ```
+
+O argumento `512` define a malha sem editar o fonte. Saídas existentes são
+recusadas: use `--destino outra_pasta` para preservá-las. `--dry-run` confere
+os caminhos sem compilar ou simular. O nome de um `OUTDIR`, sozinho, nunca
+configura o número de células. Para apenas desenhar dados existentes pelo
+VisClaw, use `make plots` (sem ponto); `make .plots` pode executar o solver.
 
 A tabela de convergência e o gráfico log–log desse caso são calculados pelo
 script `convergencia_caso1.py`, que lê as séries, compara com a solução exata,
@@ -153,8 +171,8 @@ confere os valores contra os documentados na monografia e também mede a ordem
 de $u_t$ e $u_x$:
 
 ```bash
-python3 convergencia_caso1.py            # t = 0,4
-python3 convergencia_caso1.py --tempo 0.8
+python3 convergencia_caso1.py --saida resultados/reanalise_caso1
+python3 convergencia_caso1.py --tempo 0.8 --saida resultados/reanalise_caso1_t08
 ```
 
 O detalhamento de cada arquivo alterado e o motivo de cada alteração estão em
@@ -165,6 +183,7 @@ O detalhamento de cada arquivo alterado e o motivo de cada alteração estão em
 ```text
 .
 ├── Makefile, setrun.py, setplot.py     # exemplo da raiz (a = b = 0)
+├── rodar.sh, executar_caso1.py         # execução isolada do Caso 1
 ├── setprob.f90, qinit.f90, src1.f90    # rotinas do exemplo da raiz
 ├── convergencia_caso1.py               # erros e ordens do Caso 1 (Tabela 6.1)
 ├── gerar_figuras_caso1.py              # figuras 6.1 e 6.2
@@ -183,6 +202,7 @@ O detalhamento de cada arquivo alterado e o motivo de cada alteração estão em
 ├── COMO-REPRODUZIR.md                  # guia passo a passo da reprodução
 ├── verificar-ambiente.sh               # confere compilador, Python e Clawpack
 ├── requirements.txt                    # dependências em Python
+├── tests/                              # testes de robustez sem simular
 ├── docs/                               # alterações, diff e mapa das figuras
 │   ├── ALTERACOES-EM-RELACAO-AO-CLAWPACK.md
 │   ├── DIFERENCAS-EM-RELACAO-AO-UPSTREAM.diff
